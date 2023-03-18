@@ -1,0 +1,146 @@
+---
+kind: pipeline
+type: docker
+name: pre-commit
+
+trigger:
+  event:
+    exclude:
+    - refs/pull/*/head
+
+steps:
+- name: check hooks
+  image: ${MZ_DOCKER_REGISTRY}/pre-commit:latest
+  commands:
+    - pre-commit run --all-files --verbose --show-diff-on-failure
+
+
+---
+kind: pipeline
+type: docker
+name: ubuntu-1804-clang
+trigger:
+  ref:
+    - refs/heads/master
+    - refs/pull/*/head
+    - refs/tags/*
+
+workspace:
+  path: /drone/src
+environment:
+  CONAN_CPU_COUNT: 12
+  CONAN_USER_HOME: /drone/src
+
+steps:
+- name: submodules
+  image: alpine/git
+  commands:
+    - git fetch --tags
+    - git submodule update --init --recursive
+
+- name: build
+  image: ${MZ_DOCKER_REGISTRY}/builder-1804-clang:latest
+  commands:
+    - cd build
+    - bash ./generator.sh mode=release compiler=clang generator=ninja location=inside
+    - cd clang-ninja-release
+    - ninja -j 12
+
+- name: package
+  image: ${MZ_DOCKER_REGISTRY}/builder-1804-clang:latest
+  commands:
+    - python3 build/conan_package.py --create
+  when:
+    ref:
+      - refs/pull/*/head
+
+- name: test
+  image: ${MZ_DOCKER_REGISTRY}/builder-1804-clang:latest
+  environment:
+    USER: test_runner
+  commands:
+    - cd build/clang-ninja-release
+    # disabled until a more recent ccache is available on as recipe
+    # - ctest -j 1 --output-on-failure --stop-on-failure
+
+
+---
+kind: pipeline
+type: exec
+name: darwin-macos
+trigger:
+  ref:
+    - refs/heads/master
+    - refs/pull/*/head
+    - refs/tags/*
+
+platform:
+  os: darwin
+  arch: amd64
+
+steps:
+- name: submodules
+  commands:
+    - git fetch --tags
+    - git submodule update --init --recursive
+
+- name: build
+  commands:
+    - ln -s /Users/$${USER}/Library $${HOME}/Library
+    - cd build
+    - bash ./generator.sh mode=release compiler=clang generator=ninja location=inside
+    - cd clang-ninja-release
+    - ninja -j 12
+
+- name: package
+  commands:
+    - python3 build/conan_package.py --create
+  when:
+    ref:
+      - refs/pull/*/head
+
+- name: test
+  commands:
+    - cd build/clang-ninja-release
+    - ctest -j 1 --output-on-failure --stop-on-failure
+
+
+---
+kind: pipeline
+type: exec
+name: windows-msvc64
+trigger:
+  ref:
+    - refs/heads/master
+    - refs/pull/*/head
+    - refs/tags/*
+
+platform:
+  os: windows
+  arch: amd64
+
+steps:
+- name: submodules
+  commands:
+    - git fetch --tags
+    - git submodule update --init --recursive
+
+- name: build
+  commands:
+    - cd build
+    - .\generator.bat release ninja_64 inside
+    - cd win32-ninja_64-release
+    - ninja
+
+- name: package
+  commands:
+    - python3 build/conan_package.py --create
+  when:
+    ref:
+      - refs/pull/*/head
+
+- name: test
+  commands:
+    - cd build/win32-ninja_64-release
+    # disabled until the c++ transition is complete
+    #- ctest -j 1 --output-on-failure --stop-on-failure

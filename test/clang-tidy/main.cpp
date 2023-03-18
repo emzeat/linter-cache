@@ -1,7 +1,7 @@
 /*
- * foo.cpp
+ * main.cpp
  *
- * Copyright (c) 2022 - 2023 Marius Zwicker
+ * Copyright (c) 2023 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -19,20 +19,12 @@
  * limitations under the License.
  */
 
-#include <cstdio>
-#include <cstring>
+#include "hello_world.h"
 
-class Foo {
-public:
-    Foo() : _var(0) {}
+int main(int argc, char* argv[]){
 
-    void maybe_unused()
-    {
-        if(0 == _var) {
-            _var = 2;
-        }
-    }
+    HelloWorld object;
+    object.greet();
 
-private:
-    int _var;
-};
+    return 0;
+}

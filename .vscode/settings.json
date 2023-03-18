@@ -1,0 +1,4 @@
+{
+  "cmake.buildDirectory": "${workspaceFolder}/build/clang-ninja-debug",
+  "cmake.ctest.parallelJobs": 1
+}

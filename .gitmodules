@@ -1,0 +1,4 @@
+[submodule "build"]
+	path = build
+	url = ../../emzeat/mz-cmaketools.git
+	branch = master

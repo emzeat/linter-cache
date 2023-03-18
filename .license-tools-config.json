@@ -1,0 +1,14 @@
+{
+  "author": {
+    "from_git": true
+  },
+  "license": "Apache-2.0",
+  "exclude": [
+    "^\\.[^/]+",
+    "/\\.[^/]+",
+    "xdispatch2.sublime-project",
+    "README.md",
+    "LICENSE",
+    ".*\\.rc"
+  ]
+}
