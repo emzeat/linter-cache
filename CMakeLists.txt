@@ -20,32 +20,106 @@
 #
 
 cmake_minimum_required(VERSION 3.1)
-project(linter-cache CXX C)
+include(CheckSymbolExists)
+include(CheckIncludeFile)
+project(linter-cache CXX)
 
 # build scripts
-if(NOT HAS_MZ_GLOBAL)
-    include(build/global.cmake)
-    include(build/macros.cmake)
-    include(build/conan.cmake)
-endif()
+include(build/global.cmake)
+include(build/macros.cmake)
+include(build/conan.cmake)
+include(build/linting.cmake)
 
-find_program(PYTHON3 python3 python REQUIRED)
-find_program(CCACHE ccache REQUIRED)
-find_program(CLANG_TIDY clang-tidy REQUIRED)
+# check for platform features
+check_symbol_exists( popen "stdio.h" LINTER_CACHE_HAVE_POPEN )
+check_symbol_exists( mktemp "stdlib.h" LINTER_CACHE_HAVE_MKTEMP )
+check_symbol_exists( getpid "unistd.h" LINTER_CACHE_HAVE_GETPID )
+check_symbol_exists( unlink "unistd.h" LINTER_CACHE_HAVE_UNLINK )
 
-enable_testing()
-list(APPEND INTEGRATION_TESTS
-	TestClangTidy.test_basic_run
-	TestClangTidy.test_with_extra_args
-	TestClangTidy.test_with_output
+# options
+option(BUILD_LINTER_CACHE_TESTS "Enable testing of the linter-cache tool" ON)
+
+# provide a config header with selected options and discovered features
+configure_file(
+    config.h.in
+    ${CMAKE_BINARY_DIR}/include/config.h
 )
-foreach(_test IN LISTS INTEGRATION_TESTS)
-	add_test(
-	    NAME ${_test}
-	    COMMAND ${PYTHON3} test.py ${_test}
-	        --base-dir ${CMAKE_BINARY_DIR}/integration
-	        --ccache ${CCACHE}
-	        --clang-tidy ${CLANG_TIDY}
-	    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-	)
-endforeach()
+include_directories(${CMAKE_BINARY_DIR}/include)
+
+# static library of classes to allow for unit testing
+add_library(linter-cache-obj STATIC
+    src/Environment.h
+    src/Environment.cpp
+    src/Logging.h
+    src/Logging.cpp
+    src/TemporaryFile.h
+    src/TemporaryFile.cpp
+    src/Process.h
+    src/Process.cpp
+    src/SavedArguments.h
+    src/SavedArguments.cpp
+)
+target_include_directories(linter-cache-obj
+    PUBLIC src
+)
+mz_target_props(linter-cache-obj)
+mz_auto_format(linter-cache-obj)
+
+# main program
+add_executable(linter-cache
+    src/main.cpp
+)
+target_link_libraries(linter-cache
+    PRIVATE linter-cache-obj
+)
+mz_target_props(linter-cache)
+mz_auto_format(linter-cache)
+install(TARGETS linter-cache
+    RUNTIME DESTINATION bin
+)
+
+# test coverage
+if(BUILD_LINTER_CACHE_TESTS)
+    enable_testing()
+
+    find_package(GTest REQUIRED)
+    include(GoogleTest)
+    add_executable(linter-cache_tests
+        test/unit/main.cpp
+        test/unit/test_Environment.cpp
+        test/unit/test_Logging.cpp
+        test/unit/test_TemporaryFile.cpp
+        test/unit/test_Process.cpp
+        test/unit/test_SavedArguments.cpp
+    )
+    target_link_libraries(linter-cache_tests
+        GTest::GTest
+        linter-cache-obj
+    )
+    mz_target_props(linter-cache_tests)
+    mz_auto_format(linter-cache_tests)
+    gtest_discover_tests(
+        linter-cache_tests
+        TEST_PREFIX unit.
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIRw}
+    )
+
+    find_program(PYTHON3 python3 python REQUIRED)
+    find_program(CCACHE ccache REQUIRED)
+    find_program(CLANG_TIDY clang-tidy REQUIRED)
+    list(APPEND INTEGRATION_TESTS
+        TestClangTidy.test_basic_run
+        TestClangTidy.test_with_extra_args
+        TestClangTidy.test_with_output
+    )
+    foreach(_test IN LISTS INTEGRATION_TESTS)
+        add_test(
+            NAME integration.${_test}
+            COMMAND ${PYTHON3} test.py ${_test}
+                --base-dir ${CMAKE_BINARY_DIR}/test/integration
+                --ccache ${CCACHE}
+                --clang-tidy ${CLANG_TIDY}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+    endforeach()
+endif()

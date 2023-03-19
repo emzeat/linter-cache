@@ -1,14 +1,15 @@
 {
   "author": {
-    "from_git": true
+    "from_git": true,
+    "years": [
+      2022
+    ]
   },
   "license": "Apache-2.0",
   "exclude": [
     "^\\.[^/]+",
     "/\\.[^/]+",
-    "xdispatch2.sublime-project",
     "README.md",
-    "LICENSE",
-    ".*\\.rc"
+    "LICENSE"
   ]
 }
