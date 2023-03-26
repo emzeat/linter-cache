@@ -29,18 +29,18 @@
 TEST(Process, Run)
 {
     Process process("cmake");
-    ASSERT_EQ(0, process.run());
+    ASSERT_NO_THROW(process.run());
 }
 
 TEST(Process, RunWithArgs)
 {
     Process process("cmake --version");
-    ASSERT_EQ(0, process.run());
+    ASSERT_NO_THROW(process.run());
     auto output = process.output();
     ASSERT_NE(std::string::npos, output.find("cmake version"));
 
     Process process2({ "cmake", "--version" });
-    ASSERT_EQ(0, process2.run());
+    ASSERT_NO_THROW(process2.run());
     auto output2 = process.output();
     ASSERT_NE(std::string::npos, output2.find("cmake version"));
     ASSERT_EQ(process.output(), process2.output());
@@ -49,5 +49,5 @@ TEST(Process, RunWithArgs)
 TEST(Process, RunFailure)
 {
     Process process({ "cmake", "foo" });
-    ASSERT_NE(0, process.run());
+    ASSERT_THROW(process.run(), ProcessError);
 }

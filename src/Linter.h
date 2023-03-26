@@ -19,4 +19,27 @@
  * limitations under the License.
  */
 
+#ifndef LINTER_H_
+#define LINTER_H_
 
+#include "SavedArguments.h"
+#include "Environment.h"
+#include "StringList.h"
+
+class Linter
+{
+public:
+    virtual std::string executable() const = 0;
+
+    virtual void prepare(const std::string& sourceFile,
+                         const StringList& args,
+                         SavedArguments& savedArgs,
+                         Environment& env) = 0;
+
+    virtual void preprocess(const SavedArguments& savedArgs,
+                            NamedFile& output) = 0;
+
+    virtual std::string execute(const SavedArguments& savedArgs) = 0;
+};
+
+#endif // LINTER_H_

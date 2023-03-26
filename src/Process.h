@@ -23,23 +23,43 @@
 #define PROCESS_H_
 
 #include <string>
-#include <vector>
+#include <stdexcept>
+
+#include "StringList.h"
+
+class ProcessError : public std::runtime_error
+{
+public:
+    inline ProcessError(const std::string& cmd, int exitCode)
+      : std::runtime_error(cmd)
+      , _exitCode(exitCode)
+    {}
+
+    inline int exitCode() const { return _exitCode; }
+    inline std::string cmd() const { return what(); }
+
+private:
+    int _exitCode;
+};
 
 class Process
 {
 public:
-    Process(const std::vector<std::string>& cmd);
+    Process(const StringList& cmd);
     Process(const char* cmd);
 
     inline const std::string& cmd() const { return _cmd; }
 
     inline const std::string& output() const { return _output; }
 
-    int run();
+    inline int exitCode() const { return _exitCode; }
+
+    void run();
 
 private:
     std::string _cmd;
     std::string _output;
+    int _exitCode;
 };
 
 #endif // ENVIRONMENT_H_

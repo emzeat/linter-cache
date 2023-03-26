@@ -19,6 +19,9 @@
  * limitations under the License.
  */
 
+#ifndef SAVED_ARGUMENTS_H_
+#define SAVED_ARGUMENTS_H_
+
 #include <memory>
 #include <string>
 #include <map>
@@ -39,7 +42,7 @@ public:
 
     void set(const char* key, const std::string& value);
     std::string get(const char* key,
-                    const std::string& defaultValue = std::string());
+                    const std::string& defaultValue = std::string()) const;
 
     inline operator bool() const { return !_arguments.empty(); }
 
@@ -47,3 +50,5 @@ private:
     std::unique_ptr<NamedFile> _file;
     std::map<std::string, std::string> _arguments;
 };
+
+#endif // SAVED_ARGUMENTS_H_

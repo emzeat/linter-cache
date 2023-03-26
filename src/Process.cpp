@@ -29,20 +29,17 @@
     #include <cstdio>
 #endif
 
-Process::Process(const std::vector<std::string>& cmd)
-{
-    for (const auto& arg : cmd) {
-        if (!_cmd.empty()) {
-            _cmd += " ";
-        }
-        _cmd += arg;
-    }
-}
-Process::Process(const char* cmd)
-  : _cmd(cmd)
+Process::Process(const StringList& cmd)
+  : _cmd(cmd.join(" "))
+  , _exitCode(-1)
 {}
 
-int
+Process::Process(const char* cmd)
+  : _cmd(cmd)
+  , _exitCode(-1)
+{}
+
+void
 Process::run()
 {
     _output.clear();
@@ -53,7 +50,7 @@ Process::run()
     //                 and additional spawn of a shell
     auto* stdout = popen(_cmd.c_str(), "r");
     if (nullptr == stdout) {
-        return -1;
+        throw ProcessError(_cmd, -1);
     }
 
     std::array<char, 512> buffer;
@@ -62,9 +59,11 @@ Process::run()
         buffer[0] = '\0';
     }
     _output.append(buffer.data());
-    return pclose(stdout);
+    _exitCode = pclose(stdout);
+    if (0 != _exitCode) {
+        throw ProcessError(_cmd, _exitCode);
+    }
 #else
     #error "No process implementation on this platform
 #endif
-    return 1;
 }

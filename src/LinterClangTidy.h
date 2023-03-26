@@ -19,4 +19,31 @@
  * limitations under the License.
  */
 
+#ifndef LINTER_CLANG_TIDY_H_
+#define LINTER_CLANG_TIDY_H_
 
+#include "Linter.h"
+
+class LinterClangTidy : public Linter
+{
+public:
+    LinterClangTidy(const std::string& clangTidy, const Environment& env);
+
+    std::string executable() const final { return _clangTidy; }
+
+    void prepare(const std::string& sourceFile,
+                 const StringList& args,
+                 SavedArguments& savedArgs,
+                 Environment& env) final;
+
+    void preprocess(const SavedArguments& savedArgs, NamedFile& output) final;
+
+    std::string execute(const SavedArguments& savedArg) final;
+
+private:
+    std::string invoke(const std::string& args) const;
+
+    std::string _clangTidy;
+};
+
+#endif // LINTER_CLANG_TIDY_H_

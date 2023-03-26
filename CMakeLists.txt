@@ -58,6 +58,11 @@ add_library(linter-cache-obj STATIC
     src/Process.cpp
     src/SavedArguments.h
     src/SavedArguments.cpp
+    src/StringList.h
+
+    src/Linter.h
+    src/LinterClangTidy.h
+    src/LinterClangTidy.cpp
 )
 target_include_directories(linter-cache-obj
     PUBLIC src

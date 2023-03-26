@@ -109,7 +109,7 @@ SavedArguments::set(const char* key, const std::string& value)
 }
 
 std::string
-SavedArguments::get(const char* key, const std::string& defaultValue)
+SavedArguments::get(const char* key, const std::string& defaultValue) const
 {
     auto it = _arguments.find(key);
     if (it != _arguments.end()) {

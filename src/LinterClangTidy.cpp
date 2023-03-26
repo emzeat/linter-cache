@@ -19,4 +19,75 @@
  * limitations under the License.
  */
 
+#include "LinterClangTidy.h"
+#include "Process.h"
+#include "Logging.h"
 
+static constexpr char kEnvClangTidy[] = "CLANG_TIDY";
+static constexpr char kSaveSrc[] = "src";
+static constexpr char kSaveArgs[] = "args";
+
+LinterClangTidy::LinterClangTidy(const std::string& clangTidy,
+                                 const Environment& env)
+  : _clangTidy(clangTidy)
+{
+    if (_clangTidy.empty()) {
+        _clangTidy = env.get(kEnvClangTidy, "clang-tidy");
+    }
+    LOG(TRACE) << "Using clang-tidy from '" << _clangTidy << "'";
+}
+
+void
+LinterClangTidy::prepare(const std::string& sourceFile,
+                         const StringList& args,
+                         SavedArguments& savedArgs,
+                         Environment& env)
+{
+    // forward the initial args to clang-tidy
+    savedArgs.set(kSaveSrc, sourceFile);
+    savedArgs.set(kSaveArgs, args.join(" "));
+
+    // make sure to use our clang-tidy
+    env.set(kEnvClangTidy, _clangTidy);
+
+    // clang-tidy works like clang, force it
+    env.set("CCACHE_COMPILERTYPE", "clang");
+}
+
+void
+LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
+{
+    // ccache wants to get the preproc output
+    std::string preproc;
+    // we create this from
+    // a) the source
+    // b) the effective config
+    // c) the effective lines in compdb
+
+    auto sourcePath = savedArgs.get(kSaveSrc);
+    // FLAGS = filter_compdb(fwd['db'], sourcefile)
+
+    NamedFile sourceFile(sourcePath);
+    preproc += sourceFile.readText();
+    preproc += invoke("--dump-config " + savedArgs.get(kSaveArgs) + " " +
+                      savedArgs.get(kSaveSrc));
+
+    LOG(TRACE) << "Preprocessing '" << sourcePath << "' to:\n" << preproc;
+
+    output.writeText(preproc);
+}
+
+std::string
+LinterClangTidy::execute(const SavedArguments& savedArgs)
+{
+    return invoke(savedArgs.get(kSaveArgs) + " " + savedArgs.get(kSaveSrc));
+}
+
+std::string
+LinterClangTidy::invoke(const std::string& args) const
+{
+    Process proc(_clangTidy + " " + args);
+    LOG(TRACE) << "Running " << proc.cmd();
+    cmd.run();
+    return cmd.output();
+}
