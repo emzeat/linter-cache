@@ -88,6 +88,6 @@ LinterClangTidy::invoke(const std::string& args) const
 {
     Process proc(_clangTidy + " " + args);
     LOG(TRACE) << "Running " << proc.cmd();
-    cmd.run();
-    return cmd.output();
+    proc.run();
+    return proc.output();
 }

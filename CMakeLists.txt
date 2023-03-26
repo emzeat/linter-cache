@@ -29,12 +29,14 @@ include(build/global.cmake)
 include(build/macros.cmake)
 include(build/conan.cmake)
 include(build/linting.cmake)
+set(CMAKE_CXX_STANDARD 17)
 
 # check for platform features
 check_symbol_exists( popen "stdio.h" LINTER_CACHE_HAVE_POPEN )
 check_symbol_exists( mktemp "stdlib.h" LINTER_CACHE_HAVE_MKTEMP )
 check_symbol_exists( getpid "unistd.h" LINTER_CACHE_HAVE_GETPID )
 check_symbol_exists( unlink "unistd.h" LINTER_CACHE_HAVE_UNLINK )
+check_symbol_exists( stat "sys/stat.h" LINTER_CACHE_HAVE_STAT )
 
 # options
 option(BUILD_LINTER_CACHE_TESTS "Enable testing of the linter-cache tool" ON)
@@ -59,6 +61,10 @@ add_library(linter-cache-obj STATIC
     src/SavedArguments.h
     src/SavedArguments.cpp
     src/StringList.h
+    src/CommandlineArguments.h
+    src/CommandlineArguments.cpp
+    src/Util.h
+    src/Util.cpp
 
     src/Linter.h
     src/LinterClangTidy.h
@@ -96,6 +102,7 @@ if(BUILD_LINTER_CACHE_TESTS)
         test/unit/test_TemporaryFile.cpp
         test/unit/test_Process.cpp
         test/unit/test_SavedArguments.cpp
+        test/unit/test_CommandlineArguments.cpp
     )
     target_link_libraries(linter-cache_tests
         GTest::GTest

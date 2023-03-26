@@ -38,6 +38,8 @@ public:
 
     void preprocess(const SavedArguments& savedArgs, NamedFile& output) final;
 
+    void printHelp();
+
     std::string execute(const SavedArguments& savedArg) final;
 
 private:

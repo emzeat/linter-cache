@@ -1,7 +1,7 @@
 /*
- * config.h.in
+ * Util.cpp
  *
- * Copyright (c) 2023 Marius Zwicker
+ * Copyright (c) 2022 - 2023 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -19,17 +19,26 @@
  * limitations under the License.
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#include "config.h"
 
-#cmakedefine01 LINTER_CACHE_HAVE_POPEN
+#include "Util.h"
 
-#cmakedefine01 LINTER_CACHE_HAVE_MKTEMP
+#if LINTER_CACHE_HAVE_STAT
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
+#endif
 
-#cmakedefine01 LINTER_CACHE_HAVE_GETPID
-
-#cmakedefine01 LINTER_CACHE_HAVE_UNLINK
-
-#cmakedefine01 LINTER_CACHE_HAVE_STAT
-
-#endif // CONFIG_H_
+bool
+Util::is_file(const std::string& filepath)
+{
+#if LINTER_CACHE_HAVE_STAT
+    struct stat result;
+    if (0 == stat(filepath.c_str(), &result)) {
+        return S_ISREG(result.st_mode);
+    }
+    return false;
+#else
+    #error "Cannot stat on this platform"
+#endif
+}

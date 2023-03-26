@@ -1,7 +1,7 @@
 /*
- * config.h.in
+ * CommandlineArguments.h
  *
- * Copyright (c) 2023 Marius Zwicker
+ * Copyright (c) 2022 - 2023 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -19,17 +19,35 @@
  * limitations under the License.
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef COMMANDLINE_ARGUMENTS_H_
+#define COMMANDLINE_ARGUMENTS_H_
 
-#cmakedefine01 LINTER_CACHE_HAVE_POPEN
+#include "StringList.h"
 
-#cmakedefine01 LINTER_CACHE_HAVE_MKTEMP
+enum class Mode
+{
+    CLANG_TIDY
+};
 
-#cmakedefine01 LINTER_CACHE_HAVE_GETPID
+struct CommandlineArguments
+{
+public:
+    CommandlineArguments(size_t argc, char const* const* argv);
 
-#cmakedefine01 LINTER_CACHE_HAVE_UNLINK
+    bool help = false;
 
-#cmakedefine01 LINTER_CACHE_HAVE_STAT
+    Mode mode = Mode::CLANG_TIDY;
 
-#endif // CONFIG_H_
+    std::string compilerDatabase;
+    StringList sources;
+
+    std::string objectfile;
+    std::string clangTidy;
+    std::string ccache;
+
+    StringList remainingArgs;
+
+    static void printHelp();
+};
+
+#endif // COMMANDLINE_ARGUMENTS_H_

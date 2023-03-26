@@ -1,7 +1,7 @@
 /*
- * config.h.in
+ * Util.h
  *
- * Copyright (c) 2023 Marius Zwicker
+ * Copyright (c) 2022 - 2023 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -19,17 +19,18 @@
  * limitations under the License.
  */
 
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef UTIL_H_
+#define UTIL_H_
 
-#cmakedefine01 LINTER_CACHE_HAVE_POPEN
+#include <string>
 
-#cmakedefine01 LINTER_CACHE_HAVE_MKTEMP
+class Util
+{
+public:
+    static bool is_file(const std::string& filepath);
 
-#cmakedefine01 LINTER_CACHE_HAVE_GETPID
+private:
+    Util() = delete;
+};
 
-#cmakedefine01 LINTER_CACHE_HAVE_UNLINK
-
-#cmakedefine01 LINTER_CACHE_HAVE_STAT
-
-#endif // CONFIG_H_
+#endif // UTIL_H_
