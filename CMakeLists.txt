@@ -50,6 +50,8 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 
 # static library of classes to allow for unit testing
 add_library(linter-cache-obj STATIC
+    src/Cache.h
+    src/Cache.cpp
     src/Environment.h
     src/Environment.cpp
     src/Logging.h
@@ -131,6 +133,7 @@ if(BUILD_LINTER_CACHE_TESTS)
                 --base-dir ${CMAKE_BINARY_DIR}/test/integration
                 --ccache ${CCACHE}
                 --clang-tidy ${CLANG_TIDY}
+                --linter-cache $<TARGET_FILE:linter-cache>
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
     endforeach()

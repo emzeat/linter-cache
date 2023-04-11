@@ -29,6 +29,8 @@
 class Linter
 {
 public:
+    virtual ~Linter() = default;
+
     virtual std::string executable() const = 0;
 
     virtual void prepare(const std::string& sourceFile,
@@ -39,7 +41,8 @@ public:
     virtual void preprocess(const SavedArguments& savedArgs,
                             NamedFile& output) = 0;
 
-    virtual std::string execute(const SavedArguments& savedArgs) = 0;
+    virtual void execute(const SavedArguments& savedArgs,
+                         NamedFile& output) = 0;
 };
 
 #endif // LINTER_H_

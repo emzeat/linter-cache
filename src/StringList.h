@@ -37,6 +37,9 @@ public:
     StringList(std::initializer_list<std::string> elements)
       : Base(elements)
     {}
+    StringList(char const* const* elements, size_t count)
+      : Base(elements, elements + count)
+    {}
 
     std::string join(const std::string& separator) const
     {

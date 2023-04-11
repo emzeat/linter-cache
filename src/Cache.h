@@ -1,5 +1,5 @@
 /*
- * LinterClangTidy.h
+ * Cache.h
  *
  * Copyright (c) 2022 - 2023 Marius Zwicker
  * All rights reserved.
@@ -19,33 +19,28 @@
  * limitations under the License.
  */
 
-#ifndef LINTER_CLANG_TIDY_H_
-#define LINTER_CLANG_TIDY_H_
+#ifndef CACHE_H_
+#define CACHE_H_
 
-#include "Linter.h"
+#include <string>
+#include "Environment.h"
 
-class LinterClangTidy : public Linter
+class Cache
 {
 public:
-    LinterClangTidy(const std::string& clangTidy, const Environment& env);
+    Cache(const std::string& ccache, const Environment& env);
 
-    std::string executable() const final { return _clangTidy; }
+    std::string executable() const { return _ccache; }
 
-    void prepare(const std::string& sourceFile,
-                 const StringList& args,
-                 SavedArguments& savedArgs,
-                 Environment& env) final;
-
-    void preprocess(const SavedArguments& savedArgs, NamedFile& output) final;
-
-    void printHelp();
-
-    void execute(const SavedArguments& savedArg, NamedFile& output) final;
+    void execute(const std::string& executable,
+                 const std::string& objectfile,
+                 const std::string& sourcefile,
+                 Environment& env) const;
 
 private:
     std::string invoke(const std::string& args) const;
 
-    std::string _clangTidy;
+    std::string _ccache;
 };
 
-#endif // LINTER_CLANG_TIDY_H_
+#endif // CACHE_H_

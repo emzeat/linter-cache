@@ -24,8 +24,8 @@
 #include "Logging.h"
 
 static constexpr char kEnvClangTidy[] = "CLANG_TIDY";
-static constexpr char kSaveSrc[] = "src";
-static constexpr char kSaveArgs[] = "args";
+static constexpr char kSaveSrc[] = "clangTidySrc";
+static constexpr char kSaveArgs[] = "clangTidyArgs";
 
 LinterClangTidy::LinterClangTidy(const std::string& clangTidy,
                                  const Environment& env)
@@ -49,9 +49,6 @@ LinterClangTidy::prepare(const std::string& sourceFile,
 
     // make sure to use our clang-tidy
     env.set(kEnvClangTidy, _clangTidy);
-
-    // clang-tidy works like clang, force it
-    env.set("CCACHE_COMPILERTYPE", "clang");
 }
 
 void
@@ -72,15 +69,18 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
     preproc += invoke("--dump-config " + savedArgs.get(kSaveArgs) + " " +
                       savedArgs.get(kSaveSrc));
 
-    LOG(TRACE) << "Preprocessing '" << sourcePath << "' to:\n" << preproc;
+    LOG(TRACE) << "Preprocessing '" << sourcePath << "' to '"
+               << output.filename() << "':\n"
+               << preproc;
 
     output.writeText(preproc);
 }
 
-std::string
-LinterClangTidy::execute(const SavedArguments& savedArgs)
+void
+LinterClangTidy::execute(const SavedArguments& savedArgs, NamedFile& output)
 {
-    return invoke(savedArgs.get(kSaveArgs) + " " + savedArgs.get(kSaveSrc));
+    invoke(savedArgs.get(kSaveArgs) + " " + savedArgs.get(kSaveSrc));
+    output.writeText("ok");
 }
 
 std::string

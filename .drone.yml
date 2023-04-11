@@ -112,8 +112,8 @@ name: windows-msvc64
 trigger:
   ref:
     - refs/heads/master
-    - refs/pull/*/head
-    - refs/tags/*
+    #- refs/pull/*/head
+    #- refs/tags/*
 
 platform:
   os: windows

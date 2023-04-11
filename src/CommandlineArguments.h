@@ -29,17 +29,25 @@ enum class Mode
     CLANG_TIDY
 };
 
+Mode
+modeFromString(const std::string& mode);
+const char*
+modeToString(Mode mode);
+
 struct CommandlineArguments
 {
 public:
     CommandlineArguments(size_t argc, char const* const* argv);
 
     bool help = false;
+    std::string self;
 
     Mode mode = Mode::CLANG_TIDY;
 
     std::string compilerDatabase;
     StringList sources;
+
+    bool preprocess = false;
 
     std::string objectfile;
     std::string clangTidy;

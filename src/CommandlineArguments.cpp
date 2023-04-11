@@ -24,6 +24,24 @@
 
 #include "CommandlineArguments.h"
 
+Mode
+modeFromString(const std::string& mode)
+{
+    if (mode == "CLANG_TIDY") {
+        return Mode::CLANG_TIDY;
+    }
+    throw std::runtime_error("No such Mode: " + mode);
+}
+
+const char*
+modeToString(Mode mode)
+{
+    switch (mode) {
+        case Mode::CLANG_TIDY:
+            return "CLANG_TIDY";
+    }
+}
+
 void
 CommandlineArguments::printHelp()
 {
@@ -77,11 +95,13 @@ ends_with(const std::string& string, const std::string_view& substr)
 CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
 {
     static constexpr std::string_view kCompileDb{ "-p=" };
+    static constexpr std::string_view kOutput{ "-o=" };
     static constexpr std::string_view kLinterCache{ "--linter-cache_" };
     static constexpr std::string_view kCppExt{ ".cpp" };
     static constexpr std::string_view kCExt{ ".c" };
 
     remainingArgs.reserve(argc);
+    self = argv[0];
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -91,7 +111,10 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
             help = true;
             return;
         }
-        if (arg == "-p" && i + 1 < argc) {
+        if (arg == "-E") {
+            preprocess = true;
+            remainingArgs.push_back(arg);
+        } else if (arg == "-p" && i + 1 < argc) {
             // path to compile db
             remainingArgs.push_back(arg);
             arg = argv[++i];
@@ -102,6 +125,13 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
             remainingArgs.push_back(arg);
             compilerDatabase =
               arg.substr(kCompileDb.size()) + "/compile_commands.json";
+        } else if (arg == "-o" && i + 1 < argc) {
+            // path to write to
+            arg = argv[++i];
+            objectfile = arg;
+        } else if (starts_with(arg, kOutput)) {
+            // path to write to
+            objectfile = arg.substr(kOutput.size());
         } else if (starts_with(arg, kLinterCache)) {
             // special linter-cache option
             arg = arg.substr(kLinterCache.size());

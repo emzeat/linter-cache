@@ -65,11 +65,11 @@ SavedArguments::save(Environment& env, const char* envVariable)
 }
 
 void
-SavedArguments::load(Environment& env, const char* envVariable)
+SavedArguments::load(const Environment& env, const char* envVariable)
 {
     auto filename = env.get(envVariable);
     if (filename.empty()) {
-        LOG(ERROR) << "No environment in env: " << envVariable;
+        LOG(TRACE) << "No environment in env: " << envVariable;
         return;
     }
 

@@ -37,8 +37,10 @@ Logging::Logging()
 {
     Environment env;
 
-    auto logfile = env.get("LINTER_CACHE_LOGFILE");
-    auto debug = env.get("LINTER_CACHE_DEBUG", 0);
+    auto logfile =
+      env.get("LINTER_CACHE_LOGFILE", env.get("CACHE_TIDY_LOGFILE"));
+    auto debug =
+      env.get("LINTER_CACHE_DEBUG", env.get("CACHE_TIDY_VERBOSE", false));
     if (!logfile.empty()) {
         _logfile.open(logfile, std::ios::out | std::ios::app);
         _stream = &_logfile;

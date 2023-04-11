@@ -38,7 +38,8 @@ public:
     ~SavedArguments();
 
     void save(Environment& env, const char* envVariable = kDefaultEnvVariable);
-    void load(Environment& env, const char* envVariable = kDefaultEnvVariable);
+    void load(const Environment& env,
+              const char* envVariable = kDefaultEnvVariable);
 
     void set(const char* key, const std::string& value);
     std::string get(const char* key,

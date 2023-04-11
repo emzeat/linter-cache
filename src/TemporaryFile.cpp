@@ -74,6 +74,14 @@ NamedFile::writeText(const std::string& text)
     return false;
 }
 
+void
+NamedFile::unlink()
+{
+#if LINTER_CACHE_HAVE_UNLINK
+    ::unlink(_filename.c_str());
+#endif
+}
+
 static int
 processId()
 {
@@ -108,8 +116,6 @@ TemporaryFile::TemporaryFile()
 TemporaryFile::~TemporaryFile()
 {
     if (!_filename.empty()) {
-#if LINTER_CACHE_HAVE_UNLINK
-        unlink(_filename.c_str());
-#endif
+        unlink();
     }
 }

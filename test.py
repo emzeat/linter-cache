@@ -32,17 +32,19 @@ BASE_DIR = (Path(__file__).parent / 'test').resolve()
 
 CLANG_TIDY = shutil.which('clang-tidy')
 CCACHE = shutil.which('ccache')
-CACHE_TIDY = (Path(__file__).parent / 'cache-tidy.py').resolve().as_posix()
+CACHE_TIDY = None
 
 # CLI overrides
 parser = argparse.ArgumentParser(prog='integration_test')
 parser.add_argument('--base-dir', default=BASE_DIR, type=Path)
 parser.add_argument('--ccache', default=CCACHE)
 parser.add_argument('--clang-tidy', default=CLANG_TIDY)
+parser.add_argument('--linter-cache', required=True, type=Path)
 args, remaining = parser.parse_known_args()
 BASE_DIR = args.base_dir
 CCACHE = args.ccache
 CLANG_TIDY = args.clang_tidy
+CACHE_TIDY = args.linter_cache
 sys.argv = sys.argv[0:1] + remaining
 
 # configure ccache and clang-tidy
@@ -117,7 +119,7 @@ class TestClangTidy(unittest.TestCase):
         env = os.environ.copy()
         if extra_env:
             env.update(extra_env)
-        args = ['python3', CACHE_TIDY,
+        args = [CACHE_TIDY,
                 '-p', TestClangTidy.BUILD_DIR.as_posix(),
                 '--quiet']
         if extra_args:
@@ -184,14 +186,14 @@ class TestClangTidy(unittest.TestCase):
         stats.zero()
 
         # first run should be cacheable but not in the cache yet
-        self._run(extra_args=[f'--cache-tidy-o={output.as_posix()}'])
+        self._run(extra_args=[f'--linter-cache_o={output.as_posix()}'])
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
         self.assertTrue(output.exists())
         output.unlink()
 
         # second run should be served from the cache
-        self._run(extra_args=[f'--cache-tidy-o={output.as_posix()}'])
+        self._run(extra_args=[f'--linter-cache_o={output.as_posix()}'])
         self.assertEqual(2, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
         self.assertTrue(output.exists())

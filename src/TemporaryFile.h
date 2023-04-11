@@ -33,6 +33,8 @@ public:
     std::string readText() const;
     bool writeText(const std::string&);
 
+    void unlink();
+
     inline std::string filename() const { return _filename; }
 
     inline operator bool() const { return !_filename.empty(); }

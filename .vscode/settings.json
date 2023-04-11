@@ -14,6 +14,12 @@
     "typeinfo": "cpp",
     "version": "cpp",
     "algorithm": "cpp",
-    "complex": "cpp"
-  }
+    "complex": "cpp",
+    "vector": "cpp",
+    "string_view": "cpp",
+    "iosfwd": "cpp"
+},
+"cmake.ctestArgs": [
+    "--output-on-failure --stop-on-failure"
+]
 }
