@@ -23,7 +23,9 @@
 #define CACHE_H_
 
 #include <string>
-#include "Environment.h"
+
+#include "Linter.h"
+#include "CommandlineArguments.h"
 
 class Cache
 {
@@ -32,13 +34,13 @@ public:
 
     std::string executable() const { return _ccache; }
 
-    void execute(const std::string& executable,
+    void execute(const CommandlineArguments& args,
+                 const Linter& linter,
                  const std::string& objectfile,
-                 const std::string& sourcefile,
-                 Environment& env) const;
+                 const std::string& sourcefile) const;
 
 private:
-    std::string invoke(const std::string& args) const;
+    std::string invoke(const StringList& args) const;
 
     std::string _ccache;
 };

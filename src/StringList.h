@@ -31,28 +31,21 @@ public:
     using Base = std::vector<std::string>;
 
     StringList() = default;
-    StringList(const std::string& singleElement)
-      : Base({ singleElement })
-    {}
-    StringList(std::initializer_list<std::string> elements)
-      : Base(elements)
-    {}
-    StringList(char const* const* elements, size_t count)
-      : Base(elements, elements + count)
-    {}
+    explicit StringList(const std::string& singleElement);
+    StringList(std::initializer_list<std::string> elements);
+    StringList(char const* const* elements, size_t count);
 
-    std::string join(const std::string& separator) const
-    {
-        std::string ret;
-        size_t i = 0;
-        for (const auto& string : *this) {
-            ret += string;
-            if (++i < size()) {
-                ret += separator;
-            }
-        }
-        return ret;
-    }
+    std::string join(const std::string& separator) const;
+
+    friend StringList operator+(const StringList& lhs, const std::string& rhs);
+    friend StringList operator+(const std::string& lhs, const StringList& rhs);
+    friend StringList operator+(const StringList& lhs, const StringList& rhs);
+
+    StringList& operator+=(const std::string& other);
+    StringList& operator+=(const StringList& other);
+
+    friend std::ostream& operator<<(std::ostream& stream,
+                                    const StringList& list);
 };
 
 #endif // STRING_LIST_H_

@@ -52,6 +52,10 @@ unescapeString(std::string string)
 void
 SavedArguments::save(Environment& env, const char* envVariable)
 {
+    if (!_file) {
+        _file = std::make_unique<TemporaryFile>();
+    }
+
     if (_file) {
         std::string saved;
         for (const auto& arg : _arguments) {
@@ -101,10 +105,6 @@ SavedArguments::load(const Environment& env, const char* envVariable)
 void
 SavedArguments::set(const char* key, const std::string& value)
 {
-    if (!_file) {
-        _file = std::make_unique<TemporaryFile>();
-    }
-
     _arguments[key] = value;
 }
 
@@ -116,4 +116,56 @@ SavedArguments::get(const char* key, const std::string& defaultValue) const
         return it->second;
     }
     return defaultValue;
+}
+
+static std::string
+escapeList(const StringList& list)
+{
+    std::string string;
+    for (auto element : list) {
+        for (size_t i = 0; i < element.size(); ++i) {
+            if ('"' == element[i]) {
+                element.replace(i, 1, "\\\"");
+                ++i;
+            }
+        }
+        string += element + "\":\"";
+    }
+    return string;
+}
+
+static StringList
+unescapeList(const std::string& string)
+{
+    StringList list;
+    size_t offset = 0;
+    for (size_t i = 0; i < string.size(); ++i) {
+        if ("\":\"" == string.substr(i, 3)) {
+            auto len = i - offset;
+            auto element = string.substr(offset, len);
+            i += 3;
+            offset = i;
+
+            for (size_t j = 0; j < element.size(); ++j) {
+                if ("\\\"" == element.substr(j, 2)) {
+                    element.replace(j, 2, "\"");
+                }
+            }
+            list.push_back(element);
+        }
+    }
+    return list;
+}
+
+void
+SavedArguments::set(const char* key, const StringList& value)
+{
+    set(key, escapeList(value));
+}
+
+StringList
+SavedArguments::get(const char* key, const StringList& defaultValue) const
+{
+    auto stored = get(key, escapeList(defaultValue));
+    return unescapeList(stored);
 }

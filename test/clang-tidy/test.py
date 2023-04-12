@@ -111,7 +111,7 @@ class CCacheStats:
 
 class TestClangTidy(unittest.TestCase):
 
-    SRC_DIR = (Path(__file__).parent / 'test' / 'clang-tidy').resolve()
+    SRC_DIR = Path(__file__).parent.resolve()
     BUILD_DIR = BASE_DIR / 'build'
     TESTED_FILE = SRC_DIR / 'hello_world.cpp'
 

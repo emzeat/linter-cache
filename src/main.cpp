@@ -59,7 +59,7 @@ invokedFromCommandline(const CommandlineArguments& args, Environment& env)
         saved.set(kMode, modeToString(args.mode));
         saved.save(env);
 
-        cache.execute(args.self, args.objectfile, source, env);
+        cache.execute(args, *linter, args.objectfile, source);
     }
 
     return 0;
@@ -87,7 +87,7 @@ main(int argc, char* argv[])
 {
     CommandlineArguments args(argc, argv);
     Environment env;
-    LOG(TRACE) << "Invoked as " << StringList(argv, argc).join(" ");
+    LOG(TRACE) << "Invoked as " << StringList(argv, argc);
 
     SavedArguments saved;
     saved.load(env);

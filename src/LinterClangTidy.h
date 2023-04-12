@@ -43,7 +43,7 @@ public:
     void execute(const SavedArguments& savedArg, NamedFile& output) final;
 
 private:
-    std::string invoke(const std::string& args) const;
+    std::string invoke(const StringList& args) const;
 
     std::string _clangTidy;
 };

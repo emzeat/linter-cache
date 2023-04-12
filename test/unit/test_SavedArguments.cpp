@@ -59,3 +59,25 @@ TEST(SavedArguments, EscapeSymbols)
         ASSERT_STREQ("Three\nLines\nText", inner.get("newline").c_str());
     }
 }
+
+TEST(SavedArguments, StringList)
+{
+    Environment env;
+    SavedArguments outer;
+
+    StringList values = {
+        "one", "two\nthree", "four\"quote\"", "one\":\"element"
+    };
+    outer.set("a\"b", values);
+    outer.set("dc", values);
+    outer.save(env);
+
+    {
+        SavedArguments inner;
+        inner.load(env);
+
+        StringList defaultValue;
+        ASSERT_EQ(values, inner.get("a\"b", defaultValue));
+        ASSERT_EQ(values, inner.get("dc", defaultValue));
+    }
+}

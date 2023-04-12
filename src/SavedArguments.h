@@ -28,6 +28,7 @@
 
 #include "TemporaryFile.h"
 #include "Environment.h"
+#include "StringList.h"
 
 class SavedArguments
 {
@@ -42,8 +43,10 @@ public:
               const char* envVariable = kDefaultEnvVariable);
 
     void set(const char* key, const std::string& value);
+    void set(const char* key, const StringList& value);
     std::string get(const char* key,
                     const std::string& defaultValue = std::string()) const;
+    StringList get(const char* key, const StringList& defaultValue) const;
 
     inline operator bool() const { return !_arguments.empty(); }
 

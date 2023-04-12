@@ -30,11 +30,6 @@
 #endif
 
 Process::Process(const StringList& cmd)
-  : _cmd(cmd.join(" "))
-  , _exitCode(-1)
-{}
-
-Process::Process(const char* cmd)
   : _cmd(cmd)
   , _exitCode(-1)
 {}
@@ -45,12 +40,13 @@ Process::run()
     _output.clear();
 
 #if LINTER_CACHE_HAVE_POPEN
+    const auto cmd = _cmd.join(" ");
 
     // FIXME(zwicker): popen() is easy but also lazy as it requires
     //                 and additional spawn of a shell
-    auto* stdout = popen(_cmd.c_str(), "r");
+    auto* stdout = popen(cmd.c_str(), "r");
     if (nullptr == stdout) {
-        throw ProcessError(_cmd, -1);
+        throw ProcessError(cmd, -1);
     }
 
     std::array<char, 512> buffer;
@@ -61,7 +57,7 @@ Process::run()
     _output.append(buffer.data());
     _exitCode = pclose(stdout);
     if (0 != _exitCode) {
-        throw ProcessError(_cmd, _exitCode);
+        throw ProcessError(cmd, _exitCode);
     }
 #else
     #error "No process implementation on this platform

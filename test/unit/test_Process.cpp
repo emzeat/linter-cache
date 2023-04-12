@@ -28,22 +28,16 @@
 
 TEST(Process, Run)
 {
-    Process process("cmake");
+    Process process({ "cmake" });
     ASSERT_NO_THROW(process.run());
 }
 
 TEST(Process, RunWithArgs)
 {
-    Process process("cmake --version");
+    Process process({ "cmake", "--version" });
     ASSERT_NO_THROW(process.run());
     auto output = process.output();
     ASSERT_NE(std::string::npos, output.find("cmake version"));
-
-    Process process2({ "cmake", "--version" });
-    ASSERT_NO_THROW(process2.run());
-    auto output2 = process.output();
-    ASSERT_NE(std::string::npos, output2.find("cmake version"));
-    ASSERT_EQ(process.output(), process2.output());
 }
 
 TEST(Process, RunFailure)

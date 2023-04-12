@@ -46,9 +46,8 @@ class Process
 {
 public:
     Process(const StringList& cmd);
-    Process(const char* cmd);
 
-    inline const std::string& cmd() const { return _cmd; }
+    inline const StringList& cmd() const { return _cmd; }
 
     inline const std::string& output() const { return _output; }
 
@@ -57,7 +56,7 @@ public:
     void run();
 
 private:
-    std::string _cmd;
+    StringList _cmd;
     std::string _output;
     int _exitCode;
 };

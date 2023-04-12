@@ -63,6 +63,7 @@ add_library(linter-cache-obj STATIC
     src/SavedArguments.h
     src/SavedArguments.cpp
     src/StringList.h
+    src/StringList.cpp
     src/CommandlineArguments.h
     src/CommandlineArguments.cpp
     src/Util.h
@@ -104,6 +105,7 @@ if(BUILD_LINTER_CACHE_TESTS)
         test/unit/test_TemporaryFile.cpp
         test/unit/test_Process.cpp
         test/unit/test_SavedArguments.cpp
+        test/unit/test_StringList.cpp
         test/unit/test_CommandlineArguments.cpp
     )
     target_link_libraries(linter-cache_tests
@@ -129,8 +131,8 @@ if(BUILD_LINTER_CACHE_TESTS)
     foreach(_test IN LISTS INTEGRATION_TESTS)
         add_test(
             NAME integration.${_test}
-            COMMAND ${PYTHON3} test.py ${_test}
-                --base-dir ${CMAKE_BINARY_DIR}/test/integration
+            COMMAND ${PYTHON3} test/clang-tidy/test.py ${_test}
+                --base-dir ${CMAKE_BINARY_DIR}/test/clang-tidy
                 --ccache ${CCACHE}
                 --clang-tidy ${CLANG_TIDY}
                 --linter-cache $<TARGET_FILE:linter-cache>

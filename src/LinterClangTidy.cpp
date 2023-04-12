@@ -45,7 +45,7 @@ LinterClangTidy::prepare(const std::string& sourceFile,
 {
     // forward the initial args to clang-tidy
     savedArgs.set(kSaveSrc, sourceFile);
-    savedArgs.set(kSaveArgs, args.join(" "));
+    savedArgs.set(kSaveArgs, args);
 
     // make sure to use our clang-tidy
     env.set(kEnvClangTidy, _clangTidy);
@@ -66,7 +66,7 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
 
     NamedFile sourceFile(sourcePath);
     preproc += sourceFile.readText();
-    preproc += invoke("--dump-config " + savedArgs.get(kSaveArgs) + " " +
+    preproc += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
                       savedArgs.get(kSaveSrc));
 
     LOG(TRACE) << "Preprocessing '" << sourcePath << "' to '"
@@ -79,14 +79,14 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
 void
 LinterClangTidy::execute(const SavedArguments& savedArgs, NamedFile& output)
 {
-    invoke(savedArgs.get(kSaveArgs) + " " + savedArgs.get(kSaveSrc));
+    invoke(savedArgs.get(kSaveArgs, StringList()) + savedArgs.get(kSaveSrc));
     output.writeText("ok");
 }
 
 std::string
-LinterClangTidy::invoke(const std::string& args) const
+LinterClangTidy::invoke(const StringList& args) const
 {
-    Process proc(_clangTidy + " " + args);
+    Process proc(_clangTidy + args);
     LOG(TRACE) << "Running " << proc.cmd();
     proc.run();
     return proc.output();

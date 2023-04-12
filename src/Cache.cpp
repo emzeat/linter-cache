@@ -22,11 +22,18 @@
 #include <memory>
 
 #include "Cache.h"
+#include "Environment.h"
 #include "Logging.h"
 #include "Process.h"
 #include "TemporaryFile.h"
+#include "Util.h"
 
 static constexpr char kEnvCcache[] = "CCACHE";
+#ifdef MZ_WINDOWS
+static constexpr char kPathSep[] = ";";
+#else
+static constexpr char kPathSep[] = ":";
+#endif
 
 Cache::Cache(const std::string& ccache, const Environment& env)
   : _ccache(ccache)
@@ -38,11 +45,13 @@ Cache::Cache(const std::string& ccache, const Environment& env)
 }
 
 void
-Cache::execute(const std::string& executable,
+Cache::execute(const CommandlineArguments& args,
+               const Linter& linter,
                const std::string& objectfile,
-               const std::string& sourcefile,
-               Environment& env) const
+               const std::string& sourcefile) const
 {
+    Environment env;
+
     // in order to work reliably we force the plain preprocessor
     // mode as this is the most efficient due to our lack of actual
     // compiler flags and includes
@@ -52,7 +61,11 @@ Cache::execute(const std::string& executable,
     // we work like clang, force it
     env.set("CCACHE_COMPILERTYPE", "clang");
 
-    // FIXME(zwicker): Handle CCACHE_EXTRAFILES
+    if (Util::is_file(linter.executable())) {
+        auto extraFiles = env.get("CCACHE_EXTRAFILES");
+        extraFiles += kPathSep + linter.executable();
+        env.set("CCACHE_EXTRAFILES", extraFiles);
+    }
 
     std::unique_ptr<NamedFile> temporary;
     if (objectfile.empty()) {
@@ -65,11 +78,12 @@ Cache::execute(const std::string& executable,
     // so we fake it and use a throw-away output. The actual arguments to
     // clang-tidy will be restored later when ccache is invoking us again in
     // turn
-    const auto args =
-      executable + " -o " + temporary->filename() + " -c " + sourcefile;
+    const StringList ccacheArgs = {
+        args.self, "-o", temporary->filename(), "-c", sourcefile
+    };
 
     try {
-        invoke(args);
+        invoke(ccacheArgs);
     } catch (ProcessError& error) {
         temporary->unlink();
         throw error;
@@ -77,9 +91,9 @@ Cache::execute(const std::string& executable,
 }
 
 std::string
-Cache::invoke(const std::string& args) const
+Cache::invoke(const StringList& args) const
 {
-    Process proc(_ccache + " " + args);
+    Process proc(_ccache + args);
     LOG(TRACE) << "Running " << proc.cmd();
     proc.run();
     return proc.output();
