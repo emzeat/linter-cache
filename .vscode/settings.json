@@ -17,7 +17,16 @@
     "complex": "cpp",
     "vector": "cpp",
     "string_view": "cpp",
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "__node_handle": "cpp",
+    "__split_buffer": "cpp",
+    "array": "cpp",
+    "deque": "cpp",
+    "map": "cpp",
+    "stack": "cpp",
+    "string": "cpp",
+    "unordered_map": "cpp",
+    "iterator": "cpp"
 },
 "cmake.ctestArgs": [
     "--output-on-failure --stop-on-failure"

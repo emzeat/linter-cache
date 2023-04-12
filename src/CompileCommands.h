@@ -1,5 +1,5 @@
 /*
- * TemporaryFile.h
+ * CompileCommands.h
  *
  * Copyright (c) 2022 - 2023 Marius Zwicker
  * All rights reserved.
@@ -19,39 +19,22 @@
  * limitations under the License.
  */
 
-#ifndef TEMPORARY_FILE_H_
-#define TEMPORARY_FILE_H_
+#ifndef COMPILE_COMMANDS_H_
+#define COMPILE_COMMANDS_H_
 
 #include <string>
 
 #include "StringList.h"
 
-class NamedFile
+class CompileCommands
 {
 public:
-    NamedFile(const std::string& filename = std::string());
-    virtual ~NamedFile() = default;
+    CompileCommands(const std::string& filepath);
 
-    std::string readText() const;
-    bool writeText(const std::string&);
+    StringList linesForFile(const std::string& sourcefile) const;
 
-    StringList readLines() const;
-
-    void unlink();
-
-    inline std::string filename() const { return _filename; }
-
-    inline operator bool() const { return !_filename.empty(); }
-
-protected:
-    std::string _filename;
+private:
+    std::string _filepath;
 };
 
-class TemporaryFile : public NamedFile
-{
-public:
-    TemporaryFile();
-    ~TemporaryFile();
-};
-
-#endif // TEMPORARY_FILE_H_
+#endif // COMPILE_COMMANDS_H_

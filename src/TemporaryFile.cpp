@@ -36,6 +36,29 @@ NamedFile::NamedFile(const std::string& filename)
   : _filename(filename)
 {}
 
+StringList
+NamedFile::readLines() const
+{
+    StringList out;
+    if (_filename.empty()) {
+        return out;
+    }
+
+    auto* input = fopen(_filename.c_str(), "r");
+    if (input) {
+        std::vector<char> buffer(2048, '\0');
+        while (fgets(buffer.data(), static_cast<int>(buffer.size()), input)) {
+            out.push_back(buffer.data());
+            buffer[0] = '\0';
+        }
+        if (buffer[0] != '\0') {
+            out.push_back(buffer.data());
+        }
+        fclose(input);
+    }
+    return out;
+}
+
 std::string
 NamedFile::readText() const
 {

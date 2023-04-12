@@ -55,7 +55,7 @@ invokedFromCommandline(const CommandlineArguments& args, Environment& env)
     for (const auto& source : args.sources) {
         SavedArguments saved;
 
-        linter->prepare(source, args.remainingArgs, saved, env);
+        linter->prepare(source, args, saved, env);
         saved.set(kMode, modeToString(args.mode));
         saved.save(env);
 

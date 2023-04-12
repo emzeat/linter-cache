@@ -52,6 +52,8 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 add_library(linter-cache-obj STATIC
     src/Cache.h
     src/Cache.cpp
+    src/CompileCommands.h
+    src/CompileCommands.cpp
     src/Environment.h
     src/Environment.cpp
     src/Logging.h

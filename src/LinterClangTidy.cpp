@@ -22,10 +22,12 @@
 #include "LinterClangTidy.h"
 #include "Process.h"
 #include "Logging.h"
+#include "CompileCommands.h"
 
 static constexpr char kEnvClangTidy[] = "CLANG_TIDY";
 static constexpr char kSaveSrc[] = "clangTidySrc";
 static constexpr char kSaveArgs[] = "clangTidyArgs";
+static constexpr char kSaveCompDb[] = "clangTidyCompDb";
 
 LinterClangTidy::LinterClangTidy(const std::string& clangTidy,
                                  const Environment& env)
@@ -39,13 +41,14 @@ LinterClangTidy::LinterClangTidy(const std::string& clangTidy,
 
 void
 LinterClangTidy::prepare(const std::string& sourceFile,
-                         const StringList& args,
+                         const CommandlineArguments& args,
                          SavedArguments& savedArgs,
                          Environment& env)
 {
     // forward the initial args to clang-tidy
     savedArgs.set(kSaveSrc, sourceFile);
-    savedArgs.set(kSaveArgs, args);
+    savedArgs.set(kSaveArgs, args.remainingArgs);
+    savedArgs.set(kSaveCompDb, args.compilerDatabase);
 
     // make sure to use our clang-tidy
     env.set(kEnvClangTidy, _clangTidy);
@@ -62,12 +65,13 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
     // c) the effective lines in compdb
 
     auto sourcePath = savedArgs.get(kSaveSrc);
-    // FLAGS = filter_compdb(fwd['db'], sourcefile)
-
     NamedFile sourceFile(sourcePath);
     preproc += sourceFile.readText();
     preproc += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
                       savedArgs.get(kSaveSrc));
+
+    CompileCommands compDb(savedArgs.get(kSaveCompDb));
+    preproc += compDb.linesForFile(sourcePath).join("");
 
     LOG(TRACE) << "Preprocessing '" << sourcePath << "' to '"
                << output.filename() << "':\n"

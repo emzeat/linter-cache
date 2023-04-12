@@ -23,6 +23,7 @@
 #define LINTER_H_
 
 #include "SavedArguments.h"
+#include "CommandlineArguments.h"
 #include "Environment.h"
 #include "StringList.h"
 
@@ -34,7 +35,7 @@ public:
     virtual std::string executable() const = 0;
 
     virtual void prepare(const std::string& sourceFile,
-                         const StringList& args,
+                         const CommandlineArguments& args,
                          SavedArguments& savedArgs,
                          Environment& env) = 0;
 

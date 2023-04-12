@@ -32,7 +32,7 @@ public:
     std::string executable() const final { return _clangTidy; }
 
     void prepare(const std::string& sourceFile,
-                 const StringList& args,
+                 const CommandlineArguments& args,
                  SavedArguments& savedArgs,
                  Environment& env) final;
 
