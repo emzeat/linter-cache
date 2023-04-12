@@ -38,8 +38,6 @@ public:
 
     void preprocess(const SavedArguments& savedArgs, NamedFile& output) final;
 
-    void printHelp();
-
     void execute(const SavedArguments& savedArg, NamedFile& output) final;
 
 private:

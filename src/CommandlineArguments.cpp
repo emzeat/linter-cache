@@ -45,33 +45,32 @@ modeToString(Mode mode)
 void
 CommandlineArguments::printHelp()
 {
-    std::cout << "   Wrapper to invoke clang-tidy through ccache to accelerate "
+    std::cout << "   Wrapper to invoke linters through ccache to accelerate "
                  "analysis as"
               << std::endl;
     std::cout << "   part of a regular compile job. Use as if running "
-                 "clang-tidy directly."
+                 "the linter directly."
               << std::endl;
     std::cout << std::endl;
     std::cout << "   Environment variables supported for configuration:"
               << std::endl;
-    std::cout << "   {CLANG_TIDY_ENV}: Sets the clang-tidy executable."
-              << std::endl;
-    std::cout << "   {CCACHE_ENV}: Sets the ccache executable." << std::endl;
-    std::cout << "   {CCACHE_TIDY_VERBOSE_ENV}: Enables debug messages."
-              << std::endl;
-    std::cout << "   {CCACHE_TIDY_LOGFILE_ENV}: Logs to the given file "
-                 "(implies {CCACHE_TIDY_VERBOSE_ENV})"
+    std::cout << "   CLANG_TIDY: Sets the clang-tidy executable." << std::endl;
+    std::cout << "   CCACHE: Sets the ccache executable." << std::endl;
+    std::cout << "   LINTER_CACHE_DEBUG: Enables debug messages." << std::endl;
+    std::cout << "   LINTER_CACHE_LOGFILE: Logs to the given file "
+                 "(implies LINTER_CACHE_DEBUG)"
               << std::endl;
     std::cout << std::endl;
     std::cout << "   Special flags supported to override configuration:"
               << std::endl;
-    std::cout
-      << "   --cache-tidy-o=<location of a stamp file to be touched on success>"
-      << std::endl;
-    std::cout
-      << "   --cache-tidy-{CCACHE_ENV}=<location of the ccache executable>"
-      << std::endl;
-    std::cout << "   --cache-tidy-{CLANG_TIDY_ENV}=<location of the clang-tidy "
+    std::cout << "   --linter-cache-o=<location of a stamp file to be touched "
+                 "on success>"
+              << std::endl;
+    std::cout << "    -o <location of a stamp file to be touched on success>"
+              << std::endl;
+    std::cout << "   --linter-cache-ccache=<location of the ccache executable>"
+              << std::endl;
+    std::cout << "   --linter-cache-clang-tidy=<location of the clang-tidy "
                  "executable>"
               << std::endl;
 }
@@ -96,7 +95,7 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
 {
     static constexpr std::string_view kCompileDb{ "-p=" };
     static constexpr std::string_view kOutput{ "-o=" };
-    static constexpr std::string_view kLinterCache{ "--linter-cache_" };
+    static constexpr std::string_view kLinterCache{ "--linter-cache-" };
     static constexpr std::string_view kCppExt{ ".cpp" };
     static constexpr std::string_view kCExt{ ".c" };
 

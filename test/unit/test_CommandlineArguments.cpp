@@ -72,7 +72,7 @@ TEST(CommandlineArguments, CompileDatabase)
 TEST(CommandlineArguments, CCache)
 {
     std::vector<char const*> argv = { "cache-tidy",
-                                      "--linter-cache_ccache=ccaceh_v3" };
+                                      "--linter-cache-ccache=ccaceh_v3" };
 
     CommandlineArguments args(argv.size(), argv.data());
     ASSERT_STREQ("ccaceh_v3", args.ccache.c_str());
@@ -81,7 +81,7 @@ TEST(CommandlineArguments, CCache)
 TEST(CommandlineArguments, ClangTidy)
 {
     std::vector<char const*> argv = {
-        "cache-tidy", "--linter-cache_clang-tidy=hello_world",
+        "cache-tidy", "--linter-cache-clang-tidy=hello_world",
         "foobar.cpp", "--config-file",
         "dummy.cfg",  "--export-fixes"
     };
@@ -95,11 +95,27 @@ TEST(CommandlineArguments, ClangTidy)
     ASSERT_FALSE(args.preprocess);
 }
 
+TEST(CommandlineArguments, OutputExplicit)
+{
+    std::vector<char const*> argv = { "cache-tidy",
+                                      "--linter-cache-clang-tidy=hello_world",
+                                      "--linter-cache-o=temporary.stamp",
+                                      "foobar.cpp" };
+
+    CommandlineArguments args(argv.size(), argv.data());
+    ASSERT_EQ(Mode::CLANG_TIDY, args.mode);
+    ASSERT_STREQ("hello_world", args.clangTidy.c_str());
+    ASSERT_EQ(StringList({ "foobar.cpp" }), args.sources);
+    ASSERT_EQ(StringList(), args.remainingArgs);
+    ASSERT_STREQ("temporary.stamp", args.objectfile.c_str());
+    ASSERT_FALSE(args.preprocess);
+}
+
 TEST(CommandlineArguments, Output)
 {
     std::vector<char const*> argv = { "cache-tidy",
-                                      "--linter-cache_clang-tidy=hello_world",
-                                      "--linter-cache_o=temporary.stamp",
+                                      "--linter-cache-clang-tidy=hello_world",
+                                      "-o=temporary.stamp",
                                       "foobar.cpp" };
 
     CommandlineArguments args(argv.size(), argv.data());

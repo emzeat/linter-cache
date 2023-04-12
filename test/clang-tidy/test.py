@@ -186,14 +186,14 @@ class TestClangTidy(unittest.TestCase):
         stats.zero()
 
         # first run should be cacheable but not in the cache yet
-        self._run(extra_args=[f'--linter-cache_o={output.as_posix()}'])
+        self._run(extra_args=[f'--linter-cache-o={output.as_posix()}'])
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
         self.assertTrue(output.exists())
         output.unlink()
 
         # second run should be served from the cache
-        self._run(extra_args=[f'--linter-cache_o={output.as_posix()}'])
+        self._run(extra_args=[f'--linter-cache-o={output.as_posix()}'])
         self.assertEqual(2, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
         self.assertTrue(output.exists())

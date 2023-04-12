@@ -13,9 +13,7 @@
 # WITHOUT WRITTEN PERMISSION OF THE AUTHORS.
 #
 
-import os
-
-from conans import ConanFile, CMake
+from conans import ConanFile
 
 
 class TestPackageConan(ConanFile):
