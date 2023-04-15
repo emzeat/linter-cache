@@ -39,11 +39,13 @@ class LinterCacheConan(ConanFile):
         self.copy("*", excludes=["build/*-*-*"])
 
     def requirements(self):
-        if self.options.build_tests:
-            self.requires("gtest/1.11.0")
+        pass
 
     def build_requirements(self):
+        self.tool_requires("ccache/4.6")
         self.tool_requires("clang-tools-extra/13.0.1@emzeat/external")
+        if self.options.build_tests:
+            self.test_requires("gtest/1.11.0")
 
     def _configure_cmake(self):
         cmake = CMake(self)

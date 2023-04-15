@@ -89,7 +89,11 @@ class CCacheStats:
             [CCACHE, '--show-stats'], encoding='utf8')
         return stats.split('\n')
 
+    def _version(self):
+        return subprocess.check_output([CCACHE, '--version'], encoding='utf8').split('\n')[0].strip()
+
     def print(self):
+        print(self._version())
         print('\n'.join(self._stats()))
 
     @property
@@ -102,11 +106,27 @@ class CCacheStats:
 
     @property
     def cacheable(self) -> int:
+        hits = None
+        misses = None
+        uncacheable = 0
         for line in self._stats():
             match = re.search(r'Cacheable calls: +([0-9]+) /', line)
             if match:
                 return int(match[1])
-        return -1
+            # more recent versions of ccache do not report cacheable calls anymore
+            # calculate by adding hits, misses and uncacheables
+            match = re.search(r'Hits: +([0-9]+) /', line)
+            if match and hits is None:
+                hits = int(match[1])
+            match = re.search(r'Misses: +([0-9]+)', line)
+            if match and misses is None:
+                misses = int(match[1])
+            match = re.search(r'Uncacheable: +([0-9]+)', line)
+            if match:
+                uncacheable = int(match[1])
+        if hits is None or misses is None:
+            return -1
+        return hits + misses + uncacheable
 
 
 class TestClangTidy(unittest.TestCase):

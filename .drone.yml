@@ -60,8 +60,7 @@ steps:
     USER: test_runner
   commands:
     - cd build/clang-ninja-release
-    # disabled until a more recent ccache is available on as recipe
-    # - ctest -j 1 --output-on-failure --stop-on-failure
+    - ctest -j 1 --output-on-failure --stop-on-failure
 
 
 ---
