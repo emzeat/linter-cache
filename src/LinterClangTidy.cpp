@@ -55,10 +55,10 @@ LinterClangTidy::prepare(const std::string& sourceFile,
 }
 
 void
-LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
+LinterClangTidy::preprocess(const SavedArguments& savedArgs,
+                            std::string& output)
 {
     // ccache wants to get the preproc output
-    std::string preproc;
     // we create this from
     // a) the source
     // b) the effective config
@@ -66,25 +66,19 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs, NamedFile& output)
 
     auto sourcePath = savedArgs.get(kSaveSrc);
     NamedFile sourceFile(sourcePath);
-    preproc += sourceFile.readText();
-    preproc += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
-                      savedArgs.get(kSaveSrc));
+    output += sourceFile.readText();
+    output += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
+                     savedArgs.get(kSaveSrc));
 
     CompileCommands compDb(savedArgs.get(kSaveCompDb));
-    preproc += compDb.linesForFile(sourcePath).join("");
-
-    LOG(TRACE) << "Preprocessing '" << sourcePath << "' to '"
-               << output.filename() << "':\n"
-               << preproc;
-
-    output.writeText(preproc);
+    output += compDb.linesForFile(sourcePath).join("");
 }
 
 void
-LinterClangTidy::execute(const SavedArguments& savedArgs, NamedFile& output)
+LinterClangTidy::execute(const SavedArguments& savedArgs, std::string& output)
 {
-    invoke(savedArgs.get(kSaveArgs, StringList()) + savedArgs.get(kSaveSrc));
-    output.writeText("ok");
+    output =
+      invoke(savedArgs.get(kSaveArgs, StringList()) + savedArgs.get(kSaveSrc));
 }
 
 std::string

@@ -20,6 +20,7 @@
  */
 
 #include <memory>
+#include <iostream>
 
 #include "CommandlineArguments.h"
 #include "Environment.h"
@@ -72,11 +73,24 @@ invokedFromCcache(const SavedArguments& saved,
 {
     auto linter = createLinter(modeFromString(saved.get(kMode)), args, env);
 
-    NamedFile output(args.objectfile);
+    std::string output;
     if (args.preprocess) {
         linter->preprocess(saved, output);
+        if (args.objectfile.empty()) {
+            LOG(TRACE) << "Preprocessing to stdout:\n" << output;
+            std::cout << output << std::endl;
+        } else {
+            LOG(TRACE) << "Preprocessing to '" << args.objectfile << "':\n"
+                       << output;
+            NamedFile objectfile(args.objectfile);
+            objectfile.writeText(output);
+        }
     } else {
         linter->execute(saved, output);
+        if (!args.objectfile.empty()) {
+            NamedFile objectfile(args.objectfile);
+            objectfile.writeText(output);
+        }
     }
 
     return 0;

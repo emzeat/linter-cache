@@ -36,9 +36,9 @@ public:
                  SavedArguments& savedArgs,
                  Environment& env) final;
 
-    void preprocess(const SavedArguments& savedArgs, NamedFile& output) final;
+    void preprocess(const SavedArguments& savedArgs, std::string& output) final;
 
-    void execute(const SavedArguments& savedArg, NamedFile& output) final;
+    void execute(const SavedArguments& savedArg, std::string& output) final;
 
 private:
     std::string invoke(const StringList& args) const;

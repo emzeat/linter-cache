@@ -40,10 +40,10 @@ public:
                          Environment& env) = 0;
 
     virtual void preprocess(const SavedArguments& savedArgs,
-                            NamedFile& output) = 0;
+                            std::string& output) = 0;
 
     virtual void execute(const SavedArguments& savedArgs,
-                         NamedFile& output) = 0;
+                         std::string& output) = 0;
 };
 
 #endif // LINTER_H_
