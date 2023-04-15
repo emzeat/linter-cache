@@ -1,5 +1,5 @@
 /*
- * TemporaryFile.h
+ * NamedFile.h
  *
  * Copyright (c) 2022 - 2023 Marius Zwicker
  * All rights reserved.
@@ -19,16 +19,32 @@
  * limitations under the License.
  */
 
-#ifndef TEMPORARY_FILE_H_
-#define TEMPORARY_FILE_H_
+#ifndef NAMED_FILE_H_
+#define NAMED_FILE_H_
 
-#include "NamedFile.h"
+#include <string>
 
-class TemporaryFile : public NamedFile
+#include "StringList.h"
+
+class NamedFile
 {
 public:
-    TemporaryFile();
-    ~TemporaryFile();
+    NamedFile(const std::string& filename = std::string());
+    virtual ~NamedFile() = default;
+
+    std::string readText() const;
+    bool writeText(const std::string&);
+
+    StringList readLines() const;
+
+    void unlink();
+
+    inline std::string filename() const { return _filename; }
+
+    inline operator bool() const { return !_filename.empty(); }
+
+protected:
+    std::string _filename;
 };
 
-#endif // TEMPORARY_FILE_H_
+#endif // NAMED_FILE_H_

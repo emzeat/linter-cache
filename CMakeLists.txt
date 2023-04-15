@@ -50,26 +50,28 @@ include_directories(${CMAKE_BINARY_DIR}/include)
 
 # static library of classes to allow for unit testing
 add_library(linter-cache-obj STATIC
-    src/Cache.h
     src/Cache.cpp
-    src/CompileCommands.h
-    src/CompileCommands.cpp
-    src/Environment.h
-    src/Environment.cpp
-    src/Logging.h
-    src/Logging.cpp
-    src/TemporaryFile.h
-    src/TemporaryFile.cpp
-    src/Process.h
-    src/Process.cpp
-    src/SavedArguments.h
-    src/SavedArguments.cpp
-    src/StringList.h
-    src/StringList.cpp
-    src/CommandlineArguments.h
+    src/Cache.h
     src/CommandlineArguments.cpp
-    src/Util.h
+    src/CommandlineArguments.h
+    src/CompileCommands.cpp
+    src/CompileCommands.h
+    src/Environment.cpp
+    src/Environment.h
+    src/Logging.cpp
+    src/Logging.h
+    src/NamedFile.cpp
+    src/NamedFile.h
+    src/Process.cpp
+    src/Process.h
+    src/SavedArguments.cpp
+    src/SavedArguments.h
+    src/StringList.cpp
+    src/StringList.h
+    src/TemporaryFile.cpp
+    src/TemporaryFile.h
     src/Util.cpp
+    src/Util.h
 
     src/Linter.h
     src/LinterClangTidy.h
