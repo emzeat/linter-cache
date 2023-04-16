@@ -41,10 +41,8 @@ steps:
 - name: build
   image: ${MZ_DOCKER_REGISTRY}/builder-1804-clang:latest
   commands:
-    - cd build
-    - bash ./generator.sh mode=release compiler=clang generator=ninja location=inside
-    - cd clang-ninja-release
-    - ninja -j 12
+    - bash ./build/generator.sh mode=release compiler=clang generator=ninja location=inside
+    - cmake --build --preset clang-ninja-release
 
 - name: package
   image: ${MZ_DOCKER_REGISTRY}/builder-1804-clang:latest
@@ -52,6 +50,7 @@ steps:
     - python3 build/conan_package.py --create
   when:
     ref:
+      - refs/heads/master
       - refs/pull/*/head
 
 - name: test
@@ -59,9 +58,15 @@ steps:
   environment:
     USER: test_runner
   commands:
-    - cd build/clang-ninja-release
-    - ctest -j 1 --output-on-failure --stop-on-failure
+    - ctest -j 1 --preset clang-ninja-release
 
+- name: package & upload
+  image: ${MZ_DOCKER_REGISTRY}/builder-1804-clang:latest
+  commands:
+    - python3 build/conan_package.py --create --upload
+  when:
+    ref:
+      - refs/tags/*
 
 ---
 kind: pipeline
@@ -86,22 +91,27 @@ steps:
 - name: build
   commands:
     - ln -s /Users/$${USER}/Library $${HOME}/Library
-    - cd build
-    - bash ./generator.sh mode=release compiler=clang generator=ninja location=inside
-    - cd clang-ninja-release
-    - ninja -j 12
+    - bash ./build/generator.sh mode=release compiler=clang generator=ninja location=inside
+    - cmake --build --preset clang-ninja-release
 
 - name: package
   commands:
     - python3 build/conan_package.py --create
   when:
     ref:
+      - refs/heads/master
       - refs/pull/*/head
 
 - name: test
   commands:
-    - cd build/clang-ninja-release
-    - ctest -j 1 --output-on-failure --stop-on-failure
+    - ctest -j 1 --preset clang-ninja-release
+
+- name: package & upload
+  commands:
+    - python3 build/conan_package.py --create --upload
+  when:
+    ref:
+      - refs/tags/*
 
 
 ---
@@ -126,20 +136,24 @@ steps:
 
 - name: build
   commands:
-    - cd build
-    - .\generator.bat release ninja_64 inside
-    - cd win32-ninja_64-release
-    - ninja
+    - .\build\generator.bat release ninja_64 inside
+    - cmake --build --preset win32-ninja_64-release
 
 - name: package
   commands:
     - python3 build/conan_package.py --create
   when:
     ref:
+      - refs/heads/master
       - refs/pull/*/head
 
 - name: test
   commands:
-    - cd build/win32-ninja_64-release
-    # disabled until the c++ transition is complete
-    #- ctest -j 1 --output-on-failure --stop-on-failure
+    - ctest -j 1 --preset win32-ninja_64-release
+
+- name: package & upload
+  commands:
+    - python3 build/conan_package.py --create --upload
+  when:
+    ref:
+      - refs/tags/*

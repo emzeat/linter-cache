@@ -48,7 +48,7 @@ class LinterCacheConan(ConanFile):
             self.test_requires("gtest/1.11.0")
 
     def _configure_cmake(self):
-        cmake = CMake(self)
+        cmake = CMake(self, generator='Ninja')
         cmake.definitions["MZ_DO_AUTO_FORMAT"] = False
         cmake.definitions["MZ_DO_CPPLINT"] = False
         cmake.definitions["MZ_DO_CPPLINT_DIFF"] = False
