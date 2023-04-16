@@ -121,6 +121,7 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
         test/unit/test_SavedArguments.cpp
         test/unit/test_StringList.cpp
         test/unit/test_CommandlineArguments.cpp
+        test/unit/test_Util.cpp
     )
     target_link_libraries(linter-cache_tests
         GTest::GTest

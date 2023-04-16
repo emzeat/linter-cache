@@ -37,8 +37,11 @@ Util::is_file(const std::string& filepath)
 {
 #if LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES
     auto attr = GetFileAttributesA(filepath.c_str());
-    if (LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES != attr) {
-        return attr & FILE_ATTRIBUTE_NORMAL;
+    switch (attr) {
+        case FILE_ATTRIBUTE_ARCHIVE:
+        case FILE_ATTRIBUTE_NORMAL:
+        case FILE_ATTRIBUTE_TEMPORARY:
+            return true;
     }
     return false;
 #elif LINTER_CACHE_HAVE_STAT

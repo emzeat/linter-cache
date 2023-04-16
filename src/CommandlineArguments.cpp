@@ -117,6 +117,8 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
         if (arg == "-E") {
             preprocess = true;
             remainingArgs.push_back(arg);
+        } else if (arg == "-c") {
+            // drop
         } else if (arg == "-p" && i + 1 < argc) {
             // path to compile db
             remainingArgs.push_back(arg);
