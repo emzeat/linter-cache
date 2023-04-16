@@ -77,8 +77,8 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
 void
 LinterClangTidy::execute(const SavedArguments& savedArgs, std::string& output)
 {
-    output =
-      invoke(savedArgs.get(kSaveArgs, StringList()) + savedArgs.get(kSaveSrc));
+    output = "ok-" + invoke(savedArgs.get(kSaveArgs, StringList()) +
+                            savedArgs.get(kSaveSrc));
 }
 
 std::string
