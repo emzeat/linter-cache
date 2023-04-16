@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 #include "CommandlineArguments.h"
 
@@ -40,6 +41,9 @@ modeToString(Mode mode)
         case Mode::CLANG_TIDY:
             return "CLANG_TIDY";
     }
+
+    assert(false && "Should never reach this");
+    return "<unknown mode>";
 }
 
 void

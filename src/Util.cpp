@@ -23,7 +23,10 @@
 
 #include "Util.h"
 
-#if LINTER_CACHE_HAVE_STAT
+#if LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#elif LINTER_CACHE_HAVE_STAT
     #include <sys/types.h>
     #include <sys/stat.h>
     #include <unistd.h>
@@ -32,7 +35,13 @@
 bool
 Util::is_file(const std::string& filepath)
 {
-#if LINTER_CACHE_HAVE_STAT
+#if LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES
+    auto attr = GetFileAttributesA(filepath.c_str());
+    if (LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES != attr) {
+        return attr & FILE_ATTRIBUTE_NORMAL;
+    }
+    return false;
+#elif LINTER_CACHE_HAVE_STAT
     struct stat result;
     if (0 == stat(filepath.c_str(), &result)) {
         return S_ISREG(result.st_mode);

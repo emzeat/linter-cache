@@ -33,10 +33,20 @@ set(CMAKE_CXX_STANDARD 17)
 
 # check for platform features
 check_symbol_exists( popen "stdio.h" LINTER_CACHE_HAVE_POPEN )
+check_symbol_exists( _popen "stdio.h" LINTER_CACHE_HAVE__POPEN )
 check_symbol_exists( mktemp "stdlib.h" LINTER_CACHE_HAVE_MKTEMP )
 check_symbol_exists( getpid "unistd.h" LINTER_CACHE_HAVE_GETPID )
 check_symbol_exists( unlink "unistd.h" LINTER_CACHE_HAVE_UNLINK )
 check_symbol_exists( stat "sys/stat.h" LINTER_CACHE_HAVE_STAT )
+check_symbol_exists( getenv "stdlib.h" LINTER_CACHE_HAVE_GETENV )
+check_symbol_exists( setenv "stdlib.h" LINTER_CACHE_HAVE_SETENV )
+check_symbol_exists( unsetenv "stdlib.h" LINTER_CACHE_HAVE_UNSETENV )
+check_symbol_exists( SetEnvironmentVariableA "Windows.h" LINTER_CACHE_HAVE_SET_ENVIRONMENT_VARIABLE )
+check_symbol_exists( GetEnvironmentVariableA "Windows.h" LINTER_CACHE_HAVE_GET_ENVIRONMENT_VARIABLE )
+check_symbol_exists( GetCurrentProcessId "Windows.h" LINTER_CACHE_HAVE_GET_CURRENT_PROCESS_ID )
+check_symbol_exists( GetTempFileNameA "Windows.h" LINTER_CACHE_HAVE_GET_TEMP_FILE_NAME )
+check_symbol_exists( DeleteFileA "Windows.h" LINTER_CACHE_HAVE_DELETE_FILE )
+check_symbol_exists( GetFileAttributesA "Windows.h" LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES )
 
 # options
 option(BUILD_LINTER_CACHE_TESTS "Enable testing of the linter-cache tool" ON)
@@ -97,7 +107,7 @@ install(TARGETS linter-cache
 )
 
 # test coverage
-if(BUILD_LINTER_CACHE_TESTS)
+if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
     enable_testing()
 
     find_package(GTest REQUIRED)
@@ -132,6 +142,7 @@ if(BUILD_LINTER_CACHE_TESTS)
         TestClangTidy.test_with_extra_args
         TestClangTidy.test_with_output
     )
+    string(REPLACE ";" "$<SEMICOLON>" PATH "$ENV{PATH}")
     foreach(_test IN LISTS INTEGRATION_TESTS)
         add_test(
             NAME integration.${_test}
@@ -139,6 +150,7 @@ if(BUILD_LINTER_CACHE_TESTS)
                 --base-dir ${CMAKE_BINARY_DIR}/test/clang-tidy
                 --ccache ${CCACHE}
                 --clang-tidy ${CLANG_TIDY}
+                --path "${PATH}"
                 --linter-cache $<TARGET_FILE:linter-cache>
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )

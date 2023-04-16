@@ -27,6 +27,20 @@
 
 #if LINTER_CACHE_HAVE_POPEN
     #include <cstdio>
+#elif LINTER_CACHE_HAVE__POPEN
+    #include <cstdio>
+
+inline FILE*
+popen(const char* command, const char* mode)
+{
+    return _popen(command, mode);
+}
+
+inline int
+pclose(FILE* stream)
+{
+    return _pclose(stream);
+}
 #endif
 
 Process::Process(const StringList& cmd)
@@ -39,23 +53,23 @@ Process::run()
 {
     _output.clear();
 
-#if LINTER_CACHE_HAVE_POPEN
+#if LINTER_CACHE_HAVE_POPEN || LINTER_CACHE_HAVE__POPEN
     const auto cmd = _cmd.join(" ");
 
     // FIXME(zwicker): popen() is easy but also lazy as it requires
     //                 and additional spawn of a shell
-    auto* stdout = popen(cmd.c_str(), "r");
-    if (nullptr == stdout) {
+    auto* stdoutHandle = popen(cmd.c_str(), "r");
+    if (nullptr == stdoutHandle) {
         throw ProcessError(cmd, -1);
     }
 
     std::array<char, 512> buffer;
-    while (fgets(buffer.data(), buffer.size(), stdout)) {
+    while (fgets(buffer.data(), buffer.size(), stdoutHandle)) {
         _output.append(buffer.data());
         buffer[0] = '\0';
     }
     _output.append(buffer.data());
-    _exitCode = pclose(stdout);
+    _exitCode = pclose(stdoutHandle);
     if (0 != _exitCode) {
         throw ProcessError(cmd, _exitCode);
     }

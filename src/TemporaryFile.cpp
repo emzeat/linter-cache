@@ -29,35 +29,42 @@
     #include <sys/types.h>
     #include <unistd.h>
 #endif
+#if LINTER_CACHE_HAVE_GET_CURRENT_PROCESS_ID ||                                \
+  LINTER_CACHE_HAVE_GET_TEMP_FILE_NAME
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
 
 #include "TemporaryFile.h"
-
-static int
-processId()
-{
-#if LINTER_CACHE_HAVE_GETPID
-    return getpid();
-#else
-    #error "No process id on this platform"
-#endif
-}
 
 TemporaryFile::TemporaryFile()
   : NamedFile()
 {
-#if LINTER_CACHE_HAVE_MKTEMP
     // by making our PID part of the template there is only _very_
     // little chance of a collision even though we not use actually
     // safe methods like tmpfile(). The latter would make it really
     // hard to determine the underlying filename though
+#if LINTER_CACHE_HAVE_MKTEMP && LINTER_CACHE_HAVE_GETPID
     static auto filenameTemplate =
-      "/tmp/linter-cache-" + std::to_string(processId()) + "-XXXXXX";
+      "/tmp/linter-cache-" + std::to_string(getpid()) + "-XXXXXX";
 
     std::vector<char> buffer;
     buffer.resize(filenameTemplate.size() + 1);
     std::memcpy(
       buffer.data(), filenameTemplate.data(), filenameTemplate.size());
     _filename = mktemp(buffer.data());
+#elif LINTER_CACHE_HAVE_GET_TEMP_FILE_NAME &&                                  \
+  LINTER_CACHE_HAVE_GET_CURRENT_PROCESS_ID
+    std::vector<char> tempPathBuffer(1);
+    auto pathLen = GetTempPathA(tempPathBuffer.size(), tempPathBuffer.data());
+    if (pathLen > tempPathBuffer.size()) {
+        tempPathBuffer.resize(pathLen + 1);
+        GetTempPathA(tempPathBuffer.size(), tempPathBuffer.data());
+    }
+    std::vector<char> buffer(MAX_PATH);
+    GetTempFileNameA(
+      tempPathBuffer.data(), "lc-", GetCurrentProcessId(), buffer.data());
+    _filename = buffer.data();
 #else
     #error "Cannot generate a temporary file name"
 #endif

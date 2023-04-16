@@ -20,6 +20,26 @@
  */
 
 #include <gtest/gtest.h>
+#include <iostream>
+
+#include "config.h"
+
+#if LINTER_CACHE_HAVE_SETENV
+// all good
+#elif LINTER_CACHE_HAVE_SET_ENVIRONMENT_VARIABLE
+
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #include <array>
+
+inline void
+setenv(const char* name, const char* value, int overwrite)
+{
+    static_cast<void>(overwrite);
+    SetEnvironmentVariableA(name, value);
+}
+
+#endif
 
 int
 main(int argc, char* argv[])

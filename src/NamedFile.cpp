@@ -29,6 +29,10 @@
     #include <sys/types.h>
     #include <unistd.h>
 #endif
+#if LINTER_CACHE_HAVE_DELETE_FILE
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
 
 #include "NamedFile.h"
 
@@ -102,5 +106,9 @@ NamedFile::unlink()
 {
 #if LINTER_CACHE_HAVE_UNLINK
     ::unlink(_filename.c_str());
+#elif LINTER_CACHE_HAVE_DELETE_FILE
+    DeleteFileA(_filename.c_str());
+#else
+    #error "Cannot unlink files"
 #endif
 }

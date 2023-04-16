@@ -40,12 +40,17 @@ parser.add_argument('--base-dir', default=BASE_DIR, type=Path)
 parser.add_argument('--ccache', default=CCACHE)
 parser.add_argument('--clang-tidy', default=CLANG_TIDY)
 parser.add_argument('--linter-cache', required=True, type=Path)
+parser.add_argument('--path', default=None)
 args, remaining = parser.parse_known_args()
 BASE_DIR = args.base_dir
 CCACHE = args.ccache
 CLANG_TIDY = args.clang_tidy
 CACHE_TIDY = args.linter_cache
 sys.argv = sys.argv[0:1] + remaining
+
+# explicitly set path when provided
+if args.path:
+    os.environ['PATH'] = args.path
 
 # configure ccache and clang-tidy
 os.environ['CCACHE'] = CCACHE

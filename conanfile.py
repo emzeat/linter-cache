@@ -61,6 +61,11 @@ class LinterCacheConan(ConanFile):
         cmake = self._configure_cmake()
         cmake.build()
 
+    def imports(self):
+        self.copy("*.dll", dst="${EXECUTABLE_OUTPUT_PATH}", src="bin")
+        self.copy("*.dylib*", dst="${EXECUTABLE_OUTPUT_PATH}", src="lib")
+        self.copy("*.so*", dst="${EXECUTABLE_OUTPUT_PATH}", src="lib")
+
     def package(self):
         cmake = self._configure_cmake()
         cmake.install()

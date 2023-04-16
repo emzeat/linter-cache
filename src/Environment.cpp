@@ -24,6 +24,72 @@
 #include "config.h"
 
 #include <cstdlib>
+#include <vector>
+#include <stdexcept>
+
+#if LINTER_CACHE_HAVE_SETENV && LINTER_CACHE_HAVE_GETENV &&                    \
+  LINTER_CACHE_HAVE_UNSETENV
+namespace platform {
+static void
+setenv(const char* name, const std::string& value)
+{
+    ::setenv(name, value.c_str(), /* overwrite */ 1);
+}
+
+static void
+unsetenv(const char* name)
+{
+    ::unsetenv(name);
+}
+
+static std::string
+getenv(const char* name)
+{
+    auto* value = ::getenv(name);
+    if (value) {
+        return std::string(value);
+    }
+    throw std::out_of_range(name);
+}
+}
+#elif LINTER_CACHE_HAVE_SET_ENVIRONMENT_VARIABLE &&                            \
+  LINTER_CACHE_HAVE_GET_ENVIRONMENT_VARIABLE
+
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #include <array>
+
+namespace platform {
+static void
+setenv(const char* name, const std::string& value)
+{
+    SetEnvironmentVariableA(name, value.c_str());
+}
+
+static void
+unsetenv(const char* name)
+{
+    SetEnvironmentVariableA(name, nullptr);
+}
+
+static std::string
+getenv(const char* name)
+{
+    std::vector<char> buffer(1024);
+    auto stored = GetEnvironmentVariableA(name, buffer.data(), buffer.size());
+    if (stored > buffer.size()) {
+        buffer.resize(stored + 1);
+        stored = GetEnvironmentVariableA(name, buffer.data(), buffer.size());
+    }
+    if (0 == stored) {
+        throw std::out_of_range(name);
+    }
+    return std::string(buffer.data(), stored);
+}
+}
+#else
+    #error "Cannot interact with the env on this platform"
+#endif
 
 void
 Environment::reset()
@@ -31,9 +97,9 @@ Environment::reset()
     for (const auto& var : _variables) {
         auto original = _originals.find(var);
         if (original == _originals.end()) {
-            unsetenv(var.c_str());
+            platform::unsetenv(var.c_str());
         } else {
-            setenv(var.c_str(), original->second.c_str(), /* overwrite */ 1);
+            platform::setenv(var.c_str(), original->second);
         }
     }
 
@@ -44,11 +110,11 @@ Environment::reset()
 std::string
 Environment::get(const char* key, const std::string& defaultValue)
 {
-    auto* value = getenv(key);
-    if (value) {
-        return std::string(value);
+    try {
+        return platform::getenv(key);
+    } catch (std::out_of_range&) {
+        return defaultValue;
     }
-    return defaultValue;
 }
 
 int
@@ -69,7 +135,7 @@ void
 Environment::unset(const char* key)
 {
     set(key, std::string());
-    unsetenv(key);
+    platform::unsetenv(key);
 }
 
 void
@@ -84,5 +150,5 @@ Environment::set(const char* key, const std::string& value)
         }
     }
 
-    setenv(key, value.c_str(), /* overwrite */ 1);
+    platform::setenv(key, value);
 }

@@ -97,16 +97,16 @@ invokedFromCcache(const SavedArguments& saved,
 }
 
 int
-main(int argc, char* argv[])
+main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 {
-    CommandlineArguments args(argc, argv);
-    Environment env;
-    LOG(TRACE) << "Invoked as " << StringList(argv, argc);
-
-    SavedArguments saved;
-    saved.load(env);
-
     try {
+        CommandlineArguments args(argc, argv);
+        Environment env;
+        LOG(TRACE) << "Invoked as " << StringList(argv, argc);
+
+        SavedArguments saved;
+        saved.load(env);
+
         if (saved) {
             return invokedFromCcache(saved, args, env);
         }
@@ -115,5 +115,8 @@ main(int argc, char* argv[])
     } catch (ProcessError& error) {
         LOG(ERROR) << error.what();
         return error.exitCode();
+    } catch (std::exception& e) {
+        LOG(ERROR) << "Unhandled exception thrown: " << e.what();
+        return 1;
     }
 }
