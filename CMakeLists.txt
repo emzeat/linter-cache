@@ -142,7 +142,6 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
         TestClangTidy.test_with_extra_args
         TestClangTidy.test_with_output
     )
-    string(REPLACE ";" "$<SEMICOLON>" PATH "$ENV{PATH}")
     foreach(_test IN LISTS INTEGRATION_TESTS)
         add_test(
             NAME integration.${_test}
@@ -150,7 +149,6 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
                 --base-dir ${CMAKE_BINARY_DIR}/test/clang-tidy
                 --ccache ${CCACHE}
                 --clang-tidy ${CLANG_TIDY}
-                --path "${PATH}"
                 --linter-cache $<TARGET_FILE:linter-cache>
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
