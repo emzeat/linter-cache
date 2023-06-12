@@ -1,0 +1,14 @@
+name: Pull Request
+run-name: Verifies conditions for a pull request
+on:
+  pull_request
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu
+    container: ${{ env.MZ_DOCKER_REGISTRY }}/pre-commit:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Check hooks
+        run: pre-commit run --all-files --verbose --show-diff-on-failure
