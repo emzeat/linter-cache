@@ -1,0 +1,41 @@
+name: Release on tag
+run-name: Build a release package for a tagged version
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-deploy:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-1804-large
+            compiler: clang
+            generator: ninja
+          - runner: windows-large
+            compiler: msvc
+            generator: ninja_64
+          - runner: macos-large
+            compiler: clang
+            generator: ninja
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: ${{ env.RUNNER_SHELL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+            lfs: 'true'
+            submodules: 'true'
+      - name: Configure
+        run: |
+          bash ./build/generator.sh \
+            compiler=${{ matrix.compiler }} \
+            generator=${{ matrix.generator }} \
+            mode=release \
+            location=inside \
+            -DMZ_DO_CPPLINT_DIFF=OFF
+      - name: Deploy
+        run: python3 build/conan_package.py --create --upload
