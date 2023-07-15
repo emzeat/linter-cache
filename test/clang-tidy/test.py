@@ -58,14 +58,16 @@ os.environ['CLANG_TIDY'] = CLANG_TIDY
 
 # force enable debugging in ccache so we get better insights
 DEBUGDIR = BASE_DIR / 'debug'
+shutil.rmtree(DEBUGDIR, ignore_errors=True)
 os.environ["CCACHE_DEBUG"] = "true"
 os.environ["CCACHE_DIR"] = DEBUGDIR.as_posix()
 os.environ["CCACHE_DEBUGDIR"] = DEBUGDIR.as_posix()
 
-# force verbose logging for cache-tidy
-CACHE_TIDY_LOGFILE = DEBUGDIR / 'cache_tidy.log'
-os.environ["CACHE_TIDY_VERBOSE"] = "1"
-os.environ["CACHE_TIDY_LOGFILE"] = CACHE_TIDY_LOGFILE.as_posix()
+# force verbose logging for linter-cache
+LINTER_CACHE_LOGFILE = DEBUGDIR / 'cache_tidy.log'
+LINTER_CACHE_LOGFILE.unlink(missing_ok=True)
+os.environ["LINTER_CACHE_DEBUG"] = "1"
+os.environ["LINTER_CACHE_LOGFILE"] = LINTER_CACHE_LOGFILE.as_posix()
 
 
 def _cleanup() -> None:
@@ -140,7 +142,7 @@ class TestClangTidy(unittest.TestCase):
     BUILD_DIR = BASE_DIR / 'build'
     TESTED_FILE = SRC_DIR / 'hello_world.cpp'
 
-    def _run(self, extra_env: dict = None, extra_args: list = None):
+    def _run(self, extra_env: dict = None, extra_args: list = None, check: bool = True):
         env = os.environ.copy()
         if extra_env:
             env.update(extra_env)
@@ -149,7 +151,7 @@ class TestClangTidy(unittest.TestCase):
                 '--quiet']
         if extra_args:
             args += extra_args
-        subprocess.check_call(args + [TestClangTidy.TESTED_FILE.as_posix()], env=env)
+        return subprocess.run(args + [TestClangTidy.TESTED_FILE.as_posix()], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
 
     def test_basic_run(self):
         _cleanup()
@@ -185,6 +187,36 @@ class TestClangTidy(unittest.TestCase):
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
+    def test_error_logging(self):
+        _cleanup()
+        _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+
+        stats = CCacheStats()
+
+        # first run should be cacheable but not in the cache yet
+        stats.zero()
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
+        # second run should be served from the cache
+        stats.zero()
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(1, stats.cache_hits, msg=stats.print())
+
+        # introducing an error should result in a cache miss and logged output
+        contents = TestClangTidy.TESTED_FILE.read_text()
+        edited = contents.replace('// <replace to edit>', 'int error = "string";')
+        stats.zero()
+        TestClangTidy.TESTED_FILE.write_text(edited)
+        proc = self._run(check=False)
+        TestClangTidy.TESTED_FILE.write_text(contents)
+        self.assertNotEqual(0, proc.returncode)
+        self.assertIn("[clang-diagnostic-error]", proc.stdout, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
     def test_with_extra_args(self):
         _cleanup()
         _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
@@ -202,7 +234,7 @@ class TestClangTidy(unittest.TestCase):
         self.assertEqual(2, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
-    def test_with_output(self):
+    def test_with_output_file(self):
         _cleanup()
         _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
         output = TestClangTidy.BUILD_DIR / 'clang-tidy.stamp'

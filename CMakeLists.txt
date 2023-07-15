@@ -141,7 +141,8 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
     list(APPEND INTEGRATION_TESTS
         TestClangTidy.test_basic_run
         TestClangTidy.test_with_extra_args
-        TestClangTidy.test_with_output
+        TestClangTidy.test_with_output_file
+        TestClangTidy.test_error_logging
     )
     foreach(_test IN LISTS INTEGRATION_TESTS)
         add_test(
