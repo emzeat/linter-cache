@@ -88,6 +88,7 @@ invokedFromCcache(const SavedArguments& saved,
     } else {
         linter->execute(saved, output);
         if (!args.objectfile.empty()) {
+            LOG(TRACE) << "Linting to '" << args.objectfile << "':\n" << output;
             NamedFile objectfile(args.objectfile);
             objectfile.writeText(output);
         }

@@ -78,14 +78,15 @@ void
 LinterClangTidy::execute(const SavedArguments& savedArgs, std::string& output)
 {
     output = "ok-" + invoke(savedArgs.get(kSaveArgs, StringList()) +
-                            savedArgs.get(kSaveSrc));
+                              savedArgs.get(kSaveSrc),
+                            Process::Flags::FORWARD_OUTPUT);
 }
 
 std::string
-LinterClangTidy::invoke(const StringList& args) const
+LinterClangTidy::invoke(const StringList& args, Process::Flags flags) const
 {
-    Process proc(_clangTidy + args);
-    LOG(TRACE) << "Running " << proc.cmd();
+    Process proc(_clangTidy + args, flags);
+    LOG(TRACE) << "LinterClangTidy: Running " << proc.cmd();
     proc.run();
     return proc.output();
 }

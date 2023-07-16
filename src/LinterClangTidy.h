@@ -23,6 +23,7 @@
 #define LINTER_CLANG_TIDY_H_
 
 #include "Linter.h"
+#include "Process.h"
 
 class LinterClangTidy : public Linter
 {
@@ -41,7 +42,8 @@ public:
     void execute(const SavedArguments& savedArg, std::string& output) final;
 
 private:
-    std::string invoke(const StringList& args) const;
+    std::string invoke(const StringList& args,
+                       Process::Flags flags = Process::Flags::NONE) const;
 
     std::string _clangTidy;
 };
