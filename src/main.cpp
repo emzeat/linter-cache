@@ -114,8 +114,9 @@ main(int argc, char* argv[]) // NOLINT(bugprone-exception-escape)
 
         return invokedFromCommandline(args, env);
     } catch (ProcessError& error) {
-        LOG(ERROR) << error.what();
-        return error.exitCode();
+        LOG(ERROR) << "ProcessError " << error.exitCode() << ": "
+                   << error.what();
+        return 1;
     } catch (std::exception& e) {
         LOG(ERROR) << "Unhandled exception thrown: " << e.what();
         return 1;
