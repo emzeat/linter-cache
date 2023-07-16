@@ -142,6 +142,7 @@ class TestClangTidy(unittest.TestCase):
     SRC_DIR = BASE_DIR / 'src'
     BUILD_DIR = BASE_DIR / 'build'
     TESTED_FILE = SRC_DIR / 'hello_world.cpp'
+    TESTED_CONFIG = SRC_DIR / '.clang-tidy'
 
     def _run(self, extra_env: dict = None, extra_args: list = None, check: bool = True):
         env = os.environ.copy()
@@ -187,6 +188,29 @@ class TestClangTidy(unittest.TestCase):
         # changing back to the original contents should be a hit again
         stats.zero()
         TestClangTidy.TESTED_FILE.write_text(contents)
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(1, stats.cache_hits, msg=stats.print())
+
+    def test_config_modification(self):
+        _cleanup()
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._fill_cache()
+
+        stats = CCacheStats()
+
+        # editing the configuration should result in a cache miss
+        contents = TestClangTidy.TESTED_CONFIG.read_text()
+        edited = contents.replace('llvm-header-guard', 'llvm-*')
+        stats.zero()
+        TestClangTidy.TESTED_CONFIG.write_text(edited)
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
+        # changing back to the original contents should be a hit again
+        stats.zero()
+        TestClangTidy.TESTED_CONFIG.write_text(contents)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
