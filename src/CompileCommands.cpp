@@ -21,6 +21,7 @@
 
 #include "CompileCommands.h"
 #include "TemporaryFile.h"
+#include "Util.h"
 
 CompileCommands::CompileCommands(const std::string& filepath)
   : _filepath(filepath)
@@ -29,6 +30,10 @@ CompileCommands::CompileCommands(const std::string& filepath)
 StringList
 CompileCommands::linesForFile(const std::string& sourcefile) const
 {
+#if _WIN32
+    const auto sourcefile_backward = Util::replace_all(sourcefile, "/", "\\\\");
+#endif
+
     StringList out;
     NamedFile input(_filepath);
     // as a minimal performance tuning just iterate
@@ -41,6 +46,12 @@ CompileCommands::linesForFile(const std::string& sourcefile) const
         if (line.find(sourcefile) != std::string::npos) {
             out.push_back(line);
         }
+#if _WIN32
+        // Compile db on Windows is using two backslashes
+        if (line.find(sourcefile_backward) != std::string::npos) {
+            out.push_back(line);
+        }
+#endif
     }
     return out;
 }

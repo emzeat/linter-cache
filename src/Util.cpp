@@ -54,3 +54,16 @@ Util::is_file(const std::string& filepath)
     #error "Cannot stat on this platform"
 #endif
 }
+
+std::string
+Util::replace_all(std::string input,
+                  const std::string& old_value,
+                  const std::string& new_value)
+{
+    for (size_t pos = input.find(old_value, 0); pos != std::string::npos;
+         pos = input.find(old_value, pos)) {
+        input.replace(pos, old_value.length(), new_value);
+        pos += new_value.length();
+    }
+    return input;
+}

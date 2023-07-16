@@ -29,6 +29,10 @@ class Util
 public:
     static bool is_file(const std::string& filepath);
 
+    static std::string replace_all(std::string input,
+                                   const std::string& old_value,
+                                   const std::string& new_value);
+
 private:
     Util() = delete;
 };

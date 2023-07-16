@@ -35,3 +35,13 @@ TEST(Util, IsFile)
     temporary.unlink();
     ASSERT_FALSE(Util::is_file(temporary.filename()));
 }
+
+TEST(Util, ReplaceAll)
+{
+    ASSERT_STREQ("foo-batz",
+                 Util::replace_all("foobarbatz", "bar", "-").c_str());
+    ASSERT_STREQ("foo1234567batz",
+                 Util::replace_all("foobarbatz", "bar", "1234567").c_str());
+    ASSERT_STREQ("foobarbatz",
+                 Util::replace_all("foobarbatz", "world", "goo").c_str());
+}
