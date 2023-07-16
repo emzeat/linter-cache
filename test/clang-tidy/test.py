@@ -74,15 +74,20 @@ def _cleanup() -> None:
     DEBUGDIR.mkdir(exist_ok=True, parents=True)
 
 
+def _configure_buildtree(src_dir: Path, build_dir: Path) -> None:
+    '''Configure the buildtree used to test against'''
+    subprocess.check_call(['cmake', '-S', src_dir.as_posix(), '-B', build_dir.as_posix(),
+                          '-G', 'Ninja'])
+    subprocess.check_call(
+        ['cmake', '--build', build_dir.as_posix()])
+
+
 def _prepare_buildtree(in_src_dir: Path, src_dir: Path, build_dir: Path) -> None:
     '''Prepare the buildtree used to test against'''
     shutil.rmtree(src_dir, ignore_errors=True)
     shutil.copytree(in_src_dir, src_dir, dirs_exist_ok=True)
     build_dir.mkdir(exist_ok=True, parents=True)
-    subprocess.check_call(['cmake', '-S', src_dir.as_posix(), '-B', build_dir.as_posix(),
-                          '-G', 'Ninja'], stdout=subprocess.DEVNULL)
-    subprocess.check_call(
-        ['cmake', '--build', build_dir.as_posix()], stdout=subprocess.DEVNULL)
+    _configure_buildtree(src_dir, build_dir)
 
 
 class CCacheStats:
@@ -143,6 +148,7 @@ class TestClangTidy(unittest.TestCase):
     BUILD_DIR = BASE_DIR / 'build'
     TESTED_FILE = SRC_DIR / 'hello_world.cpp'
     TESTED_CONFIG = SRC_DIR / '.clang-tidy'
+    TESTED_PROJ = SRC_DIR / 'CMakeLists.txt'
 
     def _run(self, extra_env: dict = None, extra_args: list = None, check: bool = True):
         env = os.environ.copy()
@@ -211,6 +217,31 @@ class TestClangTidy(unittest.TestCase):
         # changing back to the original contents should be a hit again
         stats.zero()
         TestClangTidy.TESTED_CONFIG.write_text(contents)
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(1, stats.cache_hits, msg=stats.print())
+
+    def test_param_modification(self):
+        _cleanup()
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._fill_cache()
+
+        stats = CCacheStats()
+
+        # changing compiler flags should result in a cache miss
+        contents = TestClangTidy.TESTED_PROJ.read_text()
+        edited = contents.replace('# set(ADD_BOGUS_INCLUDE TRUE)', 'set(ADD_BOGUS_INCLUDE TRUE)')
+        stats.zero()
+        TestClangTidy.TESTED_PROJ.write_text(edited)
+        _configure_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
+        # changing back to the original contents should be a hit again
+        stats.zero()
+        TestClangTidy.TESTED_PROJ.write_text(contents)
+        _configure_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())

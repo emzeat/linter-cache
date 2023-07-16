@@ -30,3 +30,9 @@ add_executable(hello_world
     hello_world.cpp
     main.cpp
 )
+# set(ADD_BOGUS_INCLUDE TRUE)
+if( ADD_BOGUS_INCLUDE )
+    target_include_directories(hello_world
+        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/bogus
+    )
+endif()

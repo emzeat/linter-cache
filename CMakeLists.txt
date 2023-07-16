@@ -141,6 +141,7 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
     list(APPEND INTEGRATION_TESTS
         TestClangTidy.test_source_modification
         TestClangTidy.test_config_modification
+        TestClangTidy.test_param_modification
         TestClangTidy.test_with_extra_args
         TestClangTidy.test_with_output_file
         TestClangTidy.test_error_logging
