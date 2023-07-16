@@ -58,14 +58,12 @@ os.environ['CLANG_TIDY'] = CLANG_TIDY
 
 # force enable debugging in ccache so we get better insights
 DEBUGDIR = BASE_DIR / 'debug'
-shutil.rmtree(DEBUGDIR, ignore_errors=True)
 os.environ["CCACHE_DEBUG"] = "true"
 os.environ["CCACHE_DIR"] = DEBUGDIR.as_posix()
 os.environ["CCACHE_DEBUGDIR"] = DEBUGDIR.as_posix()
 
 # force verbose logging for linter-cache
 LINTER_CACHE_LOGFILE = DEBUGDIR / 'cache_tidy.log'
-LINTER_CACHE_LOGFILE.unlink(missing_ok=True)
 os.environ["LINTER_CACHE_DEBUG"] = "1"
 os.environ["LINTER_CACHE_LOGFILE"] = LINTER_CACHE_LOGFILE.as_posix()
 
@@ -76,8 +74,10 @@ def _cleanup() -> None:
     DEBUGDIR.mkdir(exist_ok=True, parents=True)
 
 
-def _prepare_buildtree(src_dir: Path, build_dir: Path) -> None:
+def _prepare_buildtree(in_src_dir: Path, src_dir: Path, build_dir: Path) -> None:
     '''Prepare the buildtree used to test against'''
+    shutil.rmtree(src_dir, ignore_errors=True)
+    shutil.copytree(in_src_dir, src_dir, dirs_exist_ok=True)
     build_dir.mkdir(exist_ok=True, parents=True)
     subprocess.check_call(['cmake', '-S', src_dir.as_posix(), '-B', build_dir.as_posix(),
                           '-G', 'Ninja'], stdout=subprocess.DEVNULL)
@@ -138,7 +138,8 @@ class CCacheStats:
 
 class TestClangTidy(unittest.TestCase):
 
-    SRC_DIR = Path(__file__).parent.resolve()
+    TEST_PROJ_DIR = Path(__file__).parent.resolve()
+    SRC_DIR = BASE_DIR / 'src'
     BUILD_DIR = BASE_DIR / 'build'
     TESTED_FILE = SRC_DIR / 'hello_world.cpp'
 
@@ -155,7 +156,7 @@ class TestClangTidy(unittest.TestCase):
 
     def test_basic_run(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
 
         stats = CCacheStats()
 
@@ -189,7 +190,7 @@ class TestClangTidy(unittest.TestCase):
 
     def test_error_logging(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
 
         stats = CCacheStats()
 
@@ -211,7 +212,6 @@ class TestClangTidy(unittest.TestCase):
         stats.zero()
         TestClangTidy.TESTED_FILE.write_text(edited)
         proc = self._run(check=False)
-        TestClangTidy.TESTED_FILE.write_text(contents)
         self.assertNotEqual(0, proc.returncode)
         self.assertIn("[clang-diagnostic-error]", proc.stdout, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
         self.assertEqual(1, stats.cacheable, msg=stats.print())
@@ -219,7 +219,7 @@ class TestClangTidy(unittest.TestCase):
 
     def test_with_extra_args(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
 
         stats = CCacheStats()
         stats.zero()
@@ -236,7 +236,7 @@ class TestClangTidy(unittest.TestCase):
 
     def test_with_output_file(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
         output = TestClangTidy.BUILD_DIR / 'clang-tidy.stamp'
 
         stats = CCacheStats()
