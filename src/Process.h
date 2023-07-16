@@ -45,7 +45,13 @@ private:
 class Process
 {
 public:
-    Process(const StringList& cmd);
+    enum Flags
+    {
+        NONE,
+        FORWARD_OUTPUT
+    };
+
+    Process(const StringList& cmd, Flags flags = Flags::NONE);
 
     inline const StringList& cmd() const { return _cmd; }
 
@@ -56,6 +62,7 @@ public:
     void run();
 
 private:
+    Flags _flags;
     StringList _cmd;
     std::string _output;
     int _exitCode;

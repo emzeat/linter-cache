@@ -20,6 +20,7 @@
  */
 
 #include <array>
+#include <iostream>
 
 #include "Process.h"
 
@@ -43,8 +44,9 @@ pclose(FILE* stream)
 }
 #endif
 
-Process::Process(const StringList& cmd)
-  : _cmd(cmd)
+Process::Process(const StringList& cmd, Process::Flags flags)
+  : _flags(flags)
+  , _cmd(cmd)
   , _exitCode(-1)
 {}
 
@@ -66,10 +68,16 @@ Process::run()
     std::array<char, 512> buffer;
     while (fgets(buffer.data(), buffer.size(), stdoutHandle)) {
         _output.append(buffer.data());
+        if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
+            std::cout << buffer.data();
+        }
         buffer[0] = '\0';
     }
     _output.append(buffer.data());
     _exitCode = pclose(stdoutHandle);
+    if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
+        std::cout << std::flush;
+    }
     if (0 != _exitCode) {
         throw ProcessError(cmd, _exitCode);
     }

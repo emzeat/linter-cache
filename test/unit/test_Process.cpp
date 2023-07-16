@@ -45,3 +45,21 @@ TEST(Process, RunFailure)
     Process process({ "cmake", "foo" });
     ASSERT_THROW(process.run(), ProcessError);
 }
+
+TEST(Process, CaptureOutput)
+{
+    Process process({ "cmake", "--version" });
+    testing::internal::CaptureStdout();
+    ASSERT_NO_THROW(process.run());
+    std::string forwarded = testing::internal::GetCapturedStdout();
+    ASSERT_TRUE(forwarded.empty());
+}
+
+TEST(Process, ForwardOutput)
+{
+    Process process({ "cmake", "--version" }, Process::Flags::FORWARD_OUTPUT);
+    testing::internal::CaptureStdout();
+    ASSERT_NO_THROW(process.run());
+    std::string forwarded = testing::internal::GetCapturedStdout();
+    ASSERT_NE(std::string::npos, forwarded.find("cmake version"));
+}
