@@ -154,23 +154,26 @@ class TestClangTidy(unittest.TestCase):
             args += extra_args
         return subprocess.run(args + [TestClangTidy.TESTED_FILE.as_posix()], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
 
-    def test_basic_run(self):
-        _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
-
+    def _fill_cache(self):
+        '''Ensures we can expect a cache hit'''
         stats = CCacheStats()
-
         # first run should be cacheable but not in the cache yet
         stats.zero()
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
-
         # second run should be served from the cache
         stats.zero()
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
+
+    def test_source_modification(self):
+        _cleanup()
+        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._fill_cache()
+
+        stats = CCacheStats()
 
         # editing the input should result in a cache miss
         contents = TestClangTidy.TESTED_FILE.read_text()
@@ -191,20 +194,9 @@ class TestClangTidy(unittest.TestCase):
     def test_error_logging(self):
         _cleanup()
         _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._fill_cache()
 
         stats = CCacheStats()
-
-        # first run should be cacheable but not in the cache yet
-        stats.zero()
-        self._run()
-        self.assertEqual(1, stats.cacheable, msg=stats.print())
-        self.assertEqual(0, stats.cache_hits, msg=stats.print())
-
-        # second run should be served from the cache
-        stats.zero()
-        self._run()
-        self.assertEqual(1, stats.cacheable, msg=stats.print())
-        self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
         # introducing an error should result in a cache miss and logged output
         contents = TestClangTidy.TESTED_FILE.read_text()

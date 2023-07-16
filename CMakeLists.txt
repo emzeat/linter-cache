@@ -139,7 +139,7 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
     find_program(CCACHE ccache REQUIRED)
     find_program(CLANG_TIDY clang-tidy REQUIRED)
     list(APPEND INTEGRATION_TESTS
-        TestClangTidy.test_basic_run
+        TestClangTidy.test_source_modification
         TestClangTidy.test_with_extra_args
         TestClangTidy.test_with_output_file
         TestClangTidy.test_error_logging
