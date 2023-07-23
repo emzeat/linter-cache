@@ -207,14 +207,14 @@ Process::run()
                     continue;
                 }
                 child_alive = false;
-                close(polls[0].fd);
             }
             if (polls[0].revents & POLLIN) {
                 child_alive = false;
-                close(polls[0].fd);
             }
             drain_fds();
         }
+
+        close(polls[0].fd);
 
     #elif LINTER_CACHE_HAVE_KEVENT
 
@@ -270,6 +270,9 @@ Process::run()
         int exitcode = -1;
         if (wait(&exitcode) == pid) {
             drain_fds();
+
+            close(stdout_fd[0]);
+            close(stderr_fd[0]);
 
             if (WIFEXITED(exitcode) && WEXITSTATUS(exitcode) == EXIT_SUCCESS) {
                 // all good
