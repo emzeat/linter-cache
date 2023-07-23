@@ -21,6 +21,7 @@
 
 #include <array>
 #include <iostream>
+#include <cstring>
 
 #include "Process.h"
 #include "Logging.h"
@@ -28,17 +29,20 @@
 #include "config.h"
 
 #if LINTER_CACHE_HAVE_PIDFD_OPEN
-    #include <sys/types.h>
+    #include <sys/syscall.h>
+    #include <sys/poll.h>
+    #include <unistd.h>
     #include <fcntl.h>
 #endif
 #if LINTER_CACHE_HAVE_KEVENT
     #include <fcntl.h>
+    #include <unistd.h>
     #include <sys/event.h>
 #endif
 #if LINTER_CACHE_HAVE_EXECVP
     #include <unistd.h>
     #include <sys/types.h>
-    #include <sys/poll.h>
+    #include <sys/wait.h>
 #elif LINTER_CACHE_HAVE_POPEN
     #include <cstdio>
 #elif LINTER_CACHE_HAVE__POPEN
@@ -165,46 +169,51 @@ Process::run()
             // pull everything from stderr
             auto buffer = drain_fd(stderr_fd[0]);
             _stderr += buffer;
-            std::cerr << buffer.size() << " bytes from stderr" << std::endl;
             if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
                 std::cerr << buffer.data();
             }
             // pull everything from stdout
             buffer = drain_fd(stdout_fd[0]);
             _stdout += buffer;
-            std::cerr << buffer.size() << " bytes from stdout" << std::endl;
             if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
                 std::cout << buffer.data();
             }
         };
 
     #if LINTER_CACHE_HAVE_PIDFD_OPEN
-        while (true) {
-            std::vector<struct pollfd> polls;
-            // const auto child_idx = polls.size();
-            // polls.emplace_back(
-            //   { .fd = child, .events = POLLIN, .revents = 0 });
-            const auto stdout_idx = polls.size();
-            polls.push_back(
-              { .fd = stdout_fd[0], .events = POLLIN, .revents = 0 });
-            const auto stderr_idx = polls.size();
-            polls.push_back(
-              { .fd = stderr_fd[0], .events = POLLIN, .revents = 0 });
+
+        auto pid_fd = static_cast<int>(syscall(SYS_pidfd_open, pid, 0));
+        if (pid_fd < 0) {
+            LOG(ERROR) << "Failed to obtain fd for pid: " << strerror(errno);
+            throw ProcessError(cmd, -1);
+        }
+
+        bool child_alive = true;
+        while (child_alive) {
+            std::array<struct pollfd, 3> polls;
+            polls[0].fd = pid_fd;
+            polls[0].events = POLLIN;
+            polls[0].revents = 0;
+            polls[1].fd = stdout_fd[0];
+            polls[1].events = POLLIN;
+            polls[1].revents = 0;
+            polls[2].fd = stderr_fd[0];
+            polls[2].events = POLLIN;
+            polls[2].revents = 0;
 
             const auto idx = poll(polls.data(), polls.size(), -1);
             if (idx < 0) {
                 if (EINTR == errno) {
                     continue;
-                } else {
-                    std::cerr << "Child interrupted: " << strerror(errno)
-                              << std::endl;
-                    throw ProcessError(cmd, -1);
                 }
+                child_alive = false;
+                close(polls[0].fd);
             }
-            for (auto& poll : polls) {
-                if (poll.revents & POLLIN) {
-                }
+            if (polls[0].revents & POLLIN) {
+                child_alive = false;
+                close(polls[0].fd);
             }
+            drain_fds();
         }
 
     #elif LINTER_CACHE_HAVE_KEVENT
@@ -255,7 +264,7 @@ Process::run()
         }
 
     #else
-        #error "Need either pidfdopen() or kevent() support"
+        #error "Need either pidfd_open() or kevent() support"
 
     #endif
         int exitcode = -1;
