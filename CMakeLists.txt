@@ -94,6 +94,15 @@ add_library(linter-cache-obj STATIC
 target_include_directories(linter-cache-obj
     PUBLIC src
 )
+if(LINTER_CACHE_HAVE_EXECVP AND (LINTER_CACHE_HAVE_PIDFD_OPEN OR LINTER_CACHE_HAVE_KEVENT))
+    target_sources(linter-cache-obj
+        PRIVATE src/Process_fork.cpp
+    )
+elseif(LINTER_CACHE_HAVE_POPEN OR LINTER_CACHE_HAVE__POPEN)
+    target_sources(linter-cache-obj
+        PRIVATE src/Process_popen.cpp
+    )
+endif()
 mz_target_props(linter-cache-obj)
 mz_auto_format(linter-cache-obj)
 
