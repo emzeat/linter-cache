@@ -55,7 +55,11 @@ public:
 
     inline const StringList& cmd() const { return _cmd; }
 
-    inline const std::string& output() const { return _output; }
+    inline const std::string& output() const { return _stdout; }
+
+    inline const std::string& stderr() const { return _stderr; }
+
+    inline const std::string& stdout() const { return _stdout; }
 
     inline int exitCode() const { return _exitCode; }
 
@@ -64,7 +68,8 @@ public:
 private:
     Flags _flags;
     StringList _cmd;
-    std::string _output;
+    std::string _stderr;
+    std::string _stdout;
     int _exitCode;
 };
 

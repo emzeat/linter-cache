@@ -23,10 +23,23 @@
 #include <iostream>
 
 #include "Process.h"
+#include "Logging.h"
 
 #include "config.h"
 
-#if LINTER_CACHE_HAVE_POPEN
+#if LINTER_CACHE_HAVE_PIDFD_OPEN
+    #include <sys/types.h>
+    #include <fcntl.h>
+#endif
+#if LINTER_CACHE_HAVE_KEVENT
+    #include <fcntl.h>
+    #include <sys/event.h>
+#endif
+#if LINTER_CACHE_HAVE_EXECVP
+    #include <unistd.h>
+    #include <sys/types.h>
+    #include <sys/poll.h>
+#elif LINTER_CACHE_HAVE_POPEN
     #include <cstdio>
 #elif LINTER_CACHE_HAVE__POPEN
     #include <cstdio>
@@ -44,6 +57,36 @@ pclose(FILE* stream)
 }
 #endif
 
+#if LINTER_CACHE_HAVE_PIDFD_OPEN || LINTER_CACHE_HAVE_KEVENT
+static std::string
+drain_fd(int fd)
+{
+    std::string buffer;
+
+    size_t written = 0;
+    size_t remaining = buffer.size();
+
+    while (true) {
+        if (remaining <= 0) {
+            buffer.resize(buffer.size() + 512);
+            remaining = buffer.size() - written;
+        }
+
+        char* data = buffer.data() + written;
+
+        auto const actual = read(fd, data, remaining);
+        if (actual <= 0) {
+            break;
+        }
+
+        written += actual;
+        remaining -= actual;
+    }
+    buffer.resize(written);
+    return buffer;
+}
+#endif
+
 Process::Process(const StringList& cmd, Process::Flags flags)
   : _flags(flags)
   , _cmd(cmd)
@@ -53,10 +96,181 @@ Process::Process(const StringList& cmd, Process::Flags flags)
 void
 Process::run()
 {
-    _output.clear();
-
-#if LINTER_CACHE_HAVE_POPEN || LINTER_CACHE_HAVE__POPEN
     const auto cmd = _cmd.join(" ");
+    _stdout.clear();
+    _stderr.clear();
+
+    if (_cmd.empty()) {
+        LOG(ERROR) << "Empty command: '" << cmd << "'";
+        throw ProcessError(cmd, -1);
+    }
+
+#if LINTER_CACHE_HAVE_EXECVP
+
+    int stdout_fd[2];
+    if (pipe(stdout_fd)) {
+        LOG(ERROR) << "Failed to prepare stdout pipe: " << strerror(errno);
+        throw ProcessError(cmd, -1);
+    }
+
+    int stderr_fd[2];
+    if (pipe(stderr_fd)) {
+        LOG(ERROR) << "Failed to prepare stderr pipe: " << strerror(errno);
+        throw ProcessError(cmd, -1);
+    }
+
+    const auto* const file = _cmd[0].c_str();
+    std::vector<char*> argv;
+    argv.reserve(_cmd.size());
+    for (size_t i = 0; i < _cmd.size(); ++i) {
+        argv.push_back(const_cast<char*>(_cmd[i].c_str()));
+    }
+    argv.push_back(nullptr);
+
+    const auto pid = fork();
+    if (pid < 0) {
+        LOG(ERROR) << "Error forking child process: " << strerror(errno);
+        throw ProcessError(cmd, -1);
+    }
+    if (pid == 0) {
+        // Child: Do not use LOG(..) to avoid race with parent!
+
+        if (dup2(stdout_fd[1], STDOUT_FILENO) < 0) {
+            std::cerr << "Failed to redirect stdout: " << strerror(errno)
+                      << std::endl;
+            exit(1);
+        }
+        if (dup2(stderr_fd[1], STDERR_FILENO) < 0) {
+            std::cerr << "Failed to redirect stderr: " << strerror(errno)
+                      << std::endl;
+            exit(1);
+        }
+
+        if (execvp(file, argv.data()) < 0) {
+            std::cerr << "Failed to exec cmd: " << strerror(errno) << std::endl;
+            exit(1);
+        }
+        exit(0);
+    } else {
+        // Parent: Wait on child
+        close(stdout_fd[1]);
+        close(stderr_fd[1]);
+
+        // Use fds as nonblocking
+        fcntl(stdout_fd[0], F_SETFL, O_NONBLOCK);
+        fcntl(stderr_fd[0], F_SETFL, O_NONBLOCK);
+
+        // Helper to drain all outputs
+        auto drain_fds = [&] {
+            // pull everything from stderr
+            auto buffer = drain_fd(stderr_fd[0]);
+            _stderr += buffer;
+            std::cerr << buffer.size() << " bytes from stderr" << std::endl;
+            if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
+                std::cerr << buffer.data();
+            }
+            // pull everything from stdout
+            buffer = drain_fd(stdout_fd[0]);
+            _stdout += buffer;
+            std::cerr << buffer.size() << " bytes from stdout" << std::endl;
+            if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
+                std::cout << buffer.data();
+            }
+        };
+
+    #if LINTER_CACHE_HAVE_PIDFD_OPEN
+        while (true) {
+            std::vector<struct pollfd> polls;
+            // const auto child_idx = polls.size();
+            // polls.emplace_back(
+            //   { .fd = child, .events = POLLIN, .revents = 0 });
+            const auto stdout_idx = polls.size();
+            polls.push_back(
+              { .fd = stdout_fd[0], .events = POLLIN, .revents = 0 });
+            const auto stderr_idx = polls.size();
+            polls.push_back(
+              { .fd = stderr_fd[0], .events = POLLIN, .revents = 0 });
+
+            const auto idx = poll(polls.data(), polls.size(), -1);
+            if (idx < 0) {
+                if (EINTR == errno) {
+                    continue;
+                } else {
+                    std::cerr << "Child interrupted: " << strerror(errno)
+                              << std::endl;
+                    throw ProcessError(cmd, -1);
+                }
+            }
+            for (auto& poll : polls) {
+                if (poll.revents & POLLIN) {
+                }
+            }
+        }
+
+    #elif LINTER_CACHE_HAVE_KEVENT
+
+        std::array<struct kevent, 3> events;
+        EV_SET(&events[0],
+               pid,
+               EVFILT_PROC,
+               EV_ENABLE | EV_ADD | EV_CLEAR,
+               NOTE_EXIT,
+               0,
+               nullptr);
+        EV_SET(&events[1], stderr_fd[0], EVFILT_READ, EV_ADD, 0, 0, nullptr);
+        EV_SET(&events[2], stdout_fd[0], EVFILT_READ, EV_ADD, 0, 0, nullptr);
+
+        int kq = kqueue();
+        if (kq < 0) {
+            LOG(ERROR) << "Failed to create kqueue: " << strerror(errno);
+            throw ProcessError(cmd, -1);
+        }
+
+        std::array<struct kevent, events.size()> tevents;
+        bool child_alive = true;
+        while (child_alive) {
+            auto nev = kevent(kq,
+                              events.data(),
+                              events.size(),
+                              tevents.data(),
+                              tevents.size(),
+                              nullptr);
+            if (nev < 0) {
+                LOG(ERROR) << "Failed to wait on kqueue: " << strerror(errno);
+                throw ProcessError(cmd, -1);
+            }
+            drain_fds();
+            for (int i = 0; i < nev; ++i) {
+                if (tevents[i].flags & EV_ERROR) {
+                    LOG(ERROR) << "Error in kqueue: "
+                               << strerror(static_cast<int>(tevents[i].data));
+                    throw ProcessError(cmd, -1);
+                }
+                if (tevents[i].ident == pid) {
+                    // break when the child has ended
+                    child_alive = false;
+                    break;
+                }
+            }
+        }
+
+    #else
+        #error "Need either pidfdopen() or kevent() support"
+
+    #endif
+        int exitcode = -1;
+        if (wait(&exitcode) == pid) {
+            drain_fds();
+
+            if (WIFEXITED(exitcode) && WEXITSTATUS(exitcode) == EXIT_SUCCESS) {
+                // all good
+            } else {
+                throw ProcessError(cmd, WEXITSTATUS(exitcode));
+            }
+        }
+    }
+
+#elif LINTER_CACHE_HAVE_POPEN || LINTER_CACHE_HAVE__POPEN
 
     // FIXME(zwicker): popen() is easy but also lazy as it requires
     //                 and additional spawn of a shell
@@ -67,13 +281,13 @@ Process::run()
 
     std::array<char, 512> buffer;
     while (fgets(buffer.data(), buffer.size(), stdoutHandle)) {
-        _output.append(buffer.data());
+        _stdout.append(buffer.data());
         if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
             std::cout << buffer.data();
         }
         buffer[0] = '\0';
     }
-    _output.append(buffer.data());
+    _stdout.append(buffer.data());
     _exitCode = pclose(stdoutHandle);
     if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
         std::cout << std::flush;

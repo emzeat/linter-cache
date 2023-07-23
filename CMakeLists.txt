@@ -37,6 +37,9 @@ check_symbol_exists( _popen "stdio.h" LINTER_CACHE_HAVE__POPEN )
 check_symbol_exists( mktemp "stdlib.h" LINTER_CACHE_HAVE_MKTEMP )
 check_symbol_exists( getpid "unistd.h" LINTER_CACHE_HAVE_GETPID )
 check_symbol_exists( unlink "unistd.h" LINTER_CACHE_HAVE_UNLINK )
+check_symbol_exists( execvp "unistd.h" LINTER_CACHE_HAVE_EXECVP )
+check_symbol_exists( pidfd_open "sys/types.h" LINTER_CACHE_HAVE_PIDFD_OPEN )
+check_symbol_exists( kevent "sys/event.h" LINTER_CACHE_HAVE_KEVENT )
 check_symbol_exists( stat "sys/stat.h" LINTER_CACHE_HAVE_STAT )
 check_symbol_exists( getenv "stdlib.h" LINTER_CACHE_HAVE_GETENV )
 check_symbol_exists( setenv "stdlib.h" LINTER_CACHE_HAVE_SETENV )
@@ -47,6 +50,7 @@ check_symbol_exists( GetCurrentProcessId "Windows.h" LINTER_CACHE_HAVE_GET_CURRE
 check_symbol_exists( GetTempFileNameA "Windows.h" LINTER_CACHE_HAVE_GET_TEMP_FILE_NAME )
 check_symbol_exists( DeleteFileA "Windows.h" LINTER_CACHE_HAVE_DELETE_FILE )
 check_symbol_exists( GetFileAttributesA "Windows.h" LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES )
+check_symbol_exists( CreateProcessA "Windows.h" LINTER_CACHE_HAVE_CREATE_PROCESS )
 
 # options
 option(BUILD_LINTER_CACHE_TESTS "Enable testing of the linter-cache tool" ON)
