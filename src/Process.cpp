@@ -28,7 +28,7 @@
 
 #include "config.h"
 
-Process::Process(const StringList& cmd, Process::Flags flags)
+Process::Process(const StringList& cmd, int flags)
   : _flags(flags)
   , _cmd(cmd)
   , _exitCode(-1)

@@ -47,11 +47,12 @@ class Process
 public:
     enum Flags
     {
-        NONE,
-        FORWARD_OUTPUT
+        NONE = 0x00,
+        CAPTURE_STDERR = 0x01,
+        CAPTURE_STDOUT = 0x02
     };
 
-    Process(const StringList& cmd, Flags flags = Flags::NONE);
+    Process(const StringList& cmd, int = Flags::NONE);
 
     inline const StringList& cmd() const { return _cmd; }
 
@@ -64,7 +65,7 @@ public:
     void run();
 
 private:
-    Flags _flags;
+    int _flags;
     StringList _cmd;
     std::string _stderr;
     std::string _stdout;

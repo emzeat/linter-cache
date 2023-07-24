@@ -113,15 +113,19 @@ Process::run()
     if (pid == 0) {
         // Child: Do not use LOG(..) to avoid race with parent!
 
-        if (dup2(stdout_fd[1], STDOUT_FILENO) < 0) {
-            std::cerr << "Failed to redirect stdout: " << strerror(errno)
-                      << std::endl;
-            exit(1);
+        if (0 != (_flags & Process::CAPTURE_STDOUT)) {
+            if (dup2(stdout_fd[1], STDOUT_FILENO) < 0) {
+                std::cerr << "Failed to redirect stdout: " << strerror(errno)
+                          << std::endl;
+                exit(1);
+            }
         }
-        if (dup2(stderr_fd[1], STDERR_FILENO) < 0) {
-            std::cerr << "Failed to redirect stderr: " << strerror(errno)
-                      << std::endl;
-            exit(1);
+        if (0 != (_flags & Process::CAPTURE_STDERR)) {
+            if (dup2(stderr_fd[1], STDERR_FILENO) < 0) {
+                std::cerr << "Failed to redirect stderr: " << strerror(errno)
+                          << std::endl;
+                exit(1);
+            }
         }
 
         if (execvp(file, argv.data()) < 0) {
@@ -140,17 +144,13 @@ Process::run()
 
         // Helper to drain all outputs
         auto drain_fds = [&] {
-            // pull everything from stderr
-            auto buffer = drain_fd(stderr_fd[0]);
-            _stderr += buffer;
-            if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
-                std::cerr << buffer.data();
+            if (0 != (_flags & Process::CAPTURE_STDERR)) {
+                // pull everything from stderr
+                _stderr += drain_fd(stderr_fd[0]);
             }
-            // pull everything from stdout
-            buffer = drain_fd(stdout_fd[0]);
-            _stdout += buffer;
-            if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
-                std::cout << buffer.data();
+            if (0 != (_flags & Process::CAPTURE_STDOUT)) {
+                // pull everything from stdout
+                _stdout += drain_fd(stdout_fd[0]);
             }
         };
 

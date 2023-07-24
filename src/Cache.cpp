@@ -90,11 +90,10 @@ Cache::execute(const CommandlineArguments& args,
     }
 }
 
-std::string
+void
 Cache::invoke(const StringList& args) const
 {
-    Process proc(_ccache + args, Process::Flags::FORWARD_OUTPUT);
+    Process proc(_ccache + args);
     LOG(TRACE) << "Cache: Running " << proc.cmd();
     proc.run();
-    return proc.output();
 }

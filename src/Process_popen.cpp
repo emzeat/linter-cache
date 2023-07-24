@@ -64,18 +64,20 @@ Process::run()
     }
 
     std::array<char, 512> buffer;
-    while (fgets(buffer.data(), buffer.size(), stdoutHandle)) {
-        _stdout.append(buffer.data());
-        if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
+    while (nullptr != fgets(buffer.data(), buffer.size(), stdoutHandle)) {
+        if (0 != (_flags & Flags::CAPTURE_STDOUT)) {
+            _stdout.append(buffer.data());
+        } else {
             std::cout << buffer.data();
         }
         buffer[0] = '\0';
     }
-    _stdout.append(buffer.data());
-    _exitCode = pclose(stdoutHandle);
-    if (0 != (_flags & Flags::FORWARD_OUTPUT)) {
-        std::cout << std::flush;
+    if (0 != (_flags & Flags::CAPTURE_STDOUT)) {
+        _stdout.append(buffer.data());
+    } else {
+        std::cout << buffer.data() << std::flush;
     }
+    _exitCode = pclose(stdoutHandle);
     if (0 != _exitCode) {
         throw ProcessError(cmd, _exitCode);
     }

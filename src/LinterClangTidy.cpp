@@ -68,7 +68,8 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
     NamedFile sourceFile(sourcePath);
     output += sourceFile.readText();
     output += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
-                     savedArgs.get(kSaveSrc));
+                       savedArgs.get(kSaveSrc),
+                     Process::CAPTURE_STDERR | Process::CAPTURE_STDOUT);
 
     CompileCommands compDb(savedArgs.get(kSaveCompDb));
     output += compDb.linesForFile(sourcePath).join("");
@@ -78,12 +79,11 @@ void
 LinterClangTidy::execute(const SavedArguments& savedArgs, std::string& output)
 {
     output = "ok-" + invoke(savedArgs.get(kSaveArgs, StringList()) +
-                              savedArgs.get(kSaveSrc),
-                            Process::Flags::FORWARD_OUTPUT);
+                            savedArgs.get(kSaveSrc));
 }
 
 std::string
-LinterClangTidy::invoke(const StringList& args, Process::Flags flags) const
+LinterClangTidy::invoke(const StringList& args, int flags) const
 {
     Process proc(_clangTidy + args, flags);
     LOG(TRACE) << "LinterClangTidy: Running " << proc.cmd();

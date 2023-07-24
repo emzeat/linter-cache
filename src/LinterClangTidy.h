@@ -43,7 +43,7 @@ public:
 
 private:
     std::string invoke(const StringList& args,
-                       Process::Flags flags = Process::Flags::NONE) const;
+                       int flags = Process::Flags::NONE) const;
 
     std::string _clangTidy;
 };

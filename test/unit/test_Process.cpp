@@ -55,13 +55,14 @@ TEST(Process, CaptureStdOut)
 {
     static constexpr char kOutput[] = "Hello World!";
 
-    Process process({ kCustomMainPath, "--stdout", kOutput });
+    Process process({ kCustomMainPath, "--stdout", kOutput },
+                    Process::CAPTURE_STDOUT);
     testing::internal::CaptureStdout();
     testing::internal::CaptureStderr();
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     auto const capturedStderr = testing::internal::GetCapturedStderr();
+    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
     ASSERT_STREQ(kOutput, process.output().c_str());
     ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
@@ -71,13 +72,14 @@ TEST(Process, CaptureStdErr)
 {
     static constexpr char kOutput[] = "Hello World!";
 
-    Process process({ kCustomMainPath, "--stderr", kOutput });
+    Process process({ kCustomMainPath, "--stderr", kOutput },
+                    Process::CAPTURE_STDERR);
     testing::internal::CaptureStdout();
     testing::internal::CaptureStderr();
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     auto const capturedStderr = testing::internal::GetCapturedStderr();
+    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
     ASSERT_STREQ(kOutput, process.errorOutput().c_str());
     ASSERT_TRUE(process.output().empty()) << process.output();
@@ -94,13 +96,14 @@ TEST(Process, CaptureBoth)
                       "--sleep",
                       "2",
                       "--stderr",
-                      kErrput });
+                      kErrput },
+                    Process::CAPTURE_STDERR | Process::CAPTURE_STDOUT);
     testing::internal::CaptureStdout();
     testing::internal::CaptureStderr();
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     auto const capturedStderr = testing::internal::GetCapturedStderr();
+    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
     ASSERT_STREQ(kOutput, process.output().c_str());
     ASSERT_STREQ(kErrput, process.errorOutput().c_str());
@@ -110,14 +113,13 @@ TEST(Process, ForwardStdout)
 {
     static constexpr char kOutput[] = "Hello World!";
 
-    Process process({ kCustomMainPath, "--stdout", kOutput },
-                    Process::Flags::FORWARD_OUTPUT);
+    Process process({ kCustomMainPath, "--stdout", kOutput });
     testing::internal::CaptureStdout();
     testing::internal::CaptureStderr();
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
-    ASSERT_STREQ(kOutput, capturedStdout.c_str());
     auto const capturedStderr = testing::internal::GetCapturedStderr();
+    ASSERT_STREQ(kOutput, capturedStdout.c_str());
     ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
     ASSERT_TRUE(process.output().empty()) << process.output();
     ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
@@ -127,15 +129,14 @@ TEST(Process, ForwardStderr)
 {
     static constexpr char kOutput[] = "Hello World!";
 
-    Process process({ kCustomMainPath, "--stderr", kOutput },
-                    Process::Flags::FORWARD_OUTPUT);
+    Process process({ kCustomMainPath, "--stderr", kOutput });
     testing::internal::CaptureStderr();
     testing::internal::CaptureStdout();
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
     auto const capturedStderr = testing::internal::GetCapturedStderr();
-    ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
+    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
+    ASSERT_STREQ(kOutput, capturedStderr.c_str());
     ASSERT_TRUE(process.output().empty()) << process.output();
     ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
 }
@@ -146,14 +147,13 @@ TEST(Process, ForwardBoth)
     static constexpr char kErrput[] = "Oh my !!";
 
     Process process(
-      { kCustomMainPath, "--stderr", kErrput, "--stdout", kOutput },
-      Process::Flags::FORWARD_OUTPUT);
+      { kCustomMainPath, "--stderr", kErrput, "--stdout", kOutput });
     testing::internal::CaptureStderr();
     testing::internal::CaptureStdout();
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
-    ASSERT_STREQ(kOutput, capturedStdout.c_str());
     auto const capturedStderr = testing::internal::GetCapturedStderr();
+    ASSERT_STREQ(kOutput, capturedStdout.c_str());
     ASSERT_STREQ(kErrput, capturedStderr.c_str());
     ASSERT_TRUE(process.output().empty()) << process.output();
     ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
@@ -168,7 +168,8 @@ TEST(Process, CaptureReallyLong)
         output.push_back(static_cast<char>('a' + (i % 26)));
     }
 
-    Process process({ kCustomMainPath, "--stdout", output });
+    Process process({ kCustomMainPath, "--stdout", output },
+                    Process::CAPTURE_STDOUT);
     ASSERT_NO_THROW(process.run());
     ASSERT_EQ(output.size(), process.output().size());
     ASSERT_EQ(output, process.output());
