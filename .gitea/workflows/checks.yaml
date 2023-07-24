@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - runner: ubuntu-1804-large
+          - runner: ubuntu-2004-large
             compiler: clang
             generator: ninja
           - runner: windows-large
