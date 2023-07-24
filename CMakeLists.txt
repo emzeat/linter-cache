@@ -125,6 +125,15 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
 
     find_package(GTest REQUIRED)
     include(GoogleTest)
+    add_executable(custom_main
+        test/unit/custom_main.cpp
+    )
+    mz_target_props(custom_main)
+    mz_auto_format(custom_main)
+    file(GENERATE
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test/unit/custom_main.h
+        INPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/unit/custom_main.h.in
+    )
     add_executable(linter-cache_tests
         test/unit/main.cpp
         test/unit/test_Environment.cpp
@@ -139,6 +148,9 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
     target_link_libraries(linter-cache_tests
         GTest::GTest
         linter-cache-obj
+    )
+    target_include_directories(linter-cache_tests
+        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/test/unit
     )
     mz_target_props(linter-cache_tests)
     mz_auto_format(linter-cache_tests)

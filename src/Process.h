@@ -57,9 +57,7 @@ public:
 
     inline const std::string& output() const { return _stdout; }
 
-    inline const std::string& stderr() const { return _stderr; }
-
-    inline const std::string& stdout() const { return _stdout; }
+    inline const std::string& errorOutput() const { return _stderr; }
 
     inline int exitCode() const { return _exitCode; }
 
