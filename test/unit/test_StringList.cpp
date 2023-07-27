@@ -43,6 +43,22 @@ TEST(StringList, Join)
     ASSERT_STREQ("one/two/three/fold", joined.c_str());
 }
 
+TEST(StringList, Split)
+{
+    auto list = StringList::split("one/two/three/fold", '/');
+    ASSERT_EQ(4, list.size()) << list;
+    ASSERT_STREQ("one;two;three;fold", list.join(";").c_str());
+
+    list = StringList::split("one/two/three/", '/');
+    ASSERT_EQ(4, list.size()) << list.join(", ");
+
+    list = StringList::split("one//three/", '/');
+    ASSERT_EQ(4, list.size()) << list.join(", ");
+
+    list = StringList::split("", '/');
+    ASSERT_EQ(1, list.size()) << list.join(", ");
+}
+
 TEST(StringList, Concat)
 {
     StringList initial = { "cmd" };

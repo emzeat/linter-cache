@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include "Process.h"
+#include "OutputGenerator.h"
 #include "custom_main.h"
 
 // all of the tests make use of the fact that cmake has to
@@ -62,8 +63,8 @@ TEST(Process, CaptureStdOut)
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
     auto const capturedStderr = testing::internal::GetCapturedStderr();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
-    ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
+    ASSERT_TRUE(capturedStdout.empty()) << "'" << capturedStdout << "'";
+    ASSERT_TRUE(capturedStderr.empty()) << "'" << capturedStderr << "'";
     ASSERT_STREQ(kOutput, process.output().c_str());
     ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
 }
@@ -79,8 +80,8 @@ TEST(Process, CaptureStdErr)
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
     auto const capturedStderr = testing::internal::GetCapturedStderr();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
-    ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
+    ASSERT_TRUE(capturedStdout.empty()) << "'" << capturedStdout << "'";
+    ASSERT_TRUE(capturedStderr.empty()) << "'" << capturedStderr << "'";
     ASSERT_STREQ(kOutput, process.errorOutput().c_str());
     ASSERT_TRUE(process.output().empty()) << process.output();
 }
@@ -103,8 +104,8 @@ TEST(Process, CaptureBoth)
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
     auto const capturedStderr = testing::internal::GetCapturedStderr();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
-    ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
+    ASSERT_TRUE(capturedStdout.empty()) << "'" << capturedStdout << "'";
+    ASSERT_TRUE(capturedStderr.empty()) << "'" << capturedStderr << "'";
     ASSERT_STREQ(kOutput, process.output().c_str());
     ASSERT_STREQ(kErrput, process.errorOutput().c_str());
 }
@@ -120,9 +121,10 @@ TEST(Process, ForwardStdout)
     auto const capturedStdout = testing::internal::GetCapturedStdout();
     auto const capturedStderr = testing::internal::GetCapturedStderr();
     ASSERT_STREQ(kOutput, capturedStdout.c_str());
-    ASSERT_TRUE(capturedStderr.empty()) << capturedStderr;
-    ASSERT_TRUE(process.output().empty()) << process.output();
-    ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
+    ASSERT_TRUE(capturedStderr.empty()) << "'" << capturedStderr << "'";
+    ASSERT_TRUE(process.output().empty()) << "'" << process.output() << "'";
+    ASSERT_TRUE(process.errorOutput().empty())
+      << "'" << process.errorOutput() << "'";
 }
 
 TEST(Process, ForwardStderr)
@@ -135,10 +137,11 @@ TEST(Process, ForwardStderr)
     ASSERT_NO_THROW(process.run());
     auto const capturedStdout = testing::internal::GetCapturedStdout();
     auto const capturedStderr = testing::internal::GetCapturedStderr();
-    ASSERT_TRUE(capturedStdout.empty()) << capturedStdout;
+    ASSERT_TRUE(capturedStdout.empty()) << "'" << capturedStdout << "'";
     ASSERT_STREQ(kOutput, capturedStderr.c_str());
-    ASSERT_TRUE(process.output().empty()) << process.output();
-    ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
+    ASSERT_TRUE(process.output().empty()) << "'" << process.output() << "'";
+    ASSERT_TRUE(process.errorOutput().empty())
+      << "'" << process.errorOutput() << "'";
 }
 
 TEST(Process, ForwardBoth)
@@ -155,22 +158,23 @@ TEST(Process, ForwardBoth)
     auto const capturedStderr = testing::internal::GetCapturedStderr();
     ASSERT_STREQ(kOutput, capturedStdout.c_str());
     ASSERT_STREQ(kErrput, capturedStderr.c_str());
-    ASSERT_TRUE(process.output().empty()) << process.output();
-    ASSERT_TRUE(process.errorOutput().empty()) << process.errorOutput();
+    ASSERT_TRUE(process.output().empty()) << "'" << process.output() << "'";
+    ASSERT_TRUE(process.errorOutput().empty())
+      << "'" << process.errorOutput() << "'";
 }
 
 TEST(Process, CaptureReallyLong)
 {
-    static constexpr size_t kOutputLen = 10240;
-    std::string output;
-    output.reserve(kOutputLen);
-    for (size_t i = 0; i < kOutputLen; ++i) {
-        output.push_back(static_cast<char>('a' + (i % 26)));
-    }
+    // >20k is somewhat the amount of data produced when clang-tidy
+    // is dumping its config so by replicating this we can verify
+    // there is no deadlocks because we do not drain all handles
+    static constexpr size_t kOutputLen = 240000;
+    auto const expectedOutput = generateStringWithLength(kOutputLen);
 
-    Process process({ kCustomMainPath, "--stdout", output },
-                    Process::CAPTURE_STDOUT);
+    Process process(
+      { kCustomMainPath, "--generate-stdout", std::to_string(kOutputLen) },
+      Process::CAPTURE_STDOUT);
     ASSERT_NO_THROW(process.run());
-    ASSERT_EQ(output.size(), process.output().size());
-    ASSERT_EQ(output, process.output());
+    ASSERT_EQ(expectedOutput.size(), process.output().size());
+    ASSERT_EQ(expectedOutput, process.output());
 }

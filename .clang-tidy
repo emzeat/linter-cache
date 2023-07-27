@@ -31,7 +31,8 @@ Checks: >
     -clang-analyzer-core.NonNullParamChecker,
     -misc-non-private-member-variables-in-classes,
     -readability-function-cognitive-complexity,
-    -bugprone-easily-swappable-parameters
+    -bugprone-easily-swappable-parameters,
+    -performance-no-int-to-ptr
 
 # All warnings are errors
 WarningsAsErrors: "*"

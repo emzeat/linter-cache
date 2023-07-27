@@ -36,6 +36,7 @@ public:
     StringList(char const* const* elements, size_t count);
 
     std::string join(const std::string& separator) const;
+    static StringList split(const std::string& input, char delimiter);
 
     friend StringList operator+(const StringList& lhs, const std::string& rhs);
     friend StringList operator+(const std::string& lhs, const StringList& rhs);

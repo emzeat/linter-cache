@@ -48,6 +48,23 @@ StringList::join(const std::string& separator) const
 }
 
 StringList
+StringList::split(const std::string& input, char delimiter)
+{
+    StringList result;
+    size_t start = 0;
+    auto end = input.find_first_of(delimiter);
+    while (end != std::string::npos) {
+        result.push_back(input.substr(start, end - start));
+        start = end + 1;
+        end = input.find_first_of(delimiter, start);
+    }
+    if (start < end) {
+        result.push_back(input.substr(start));
+    }
+    return result;
+}
+
+StringList
 operator+(const StringList& lhs, const std::string& rhs)
 {
     StringList copy(lhs);

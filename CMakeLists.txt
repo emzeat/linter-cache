@@ -98,6 +98,10 @@ if(LINTER_CACHE_HAVE_EXECVP AND (LINTER_CACHE_HAVE_PIDFD_OPEN OR LINTER_CACHE_HA
     target_sources(linter-cache-obj
         PRIVATE src/Process_fork.cpp
     )
+elseif(LINTER_CACHE_HAVE_CREATE_PROCESS)
+    target_sources(linter-cache-obj
+        PRIVATE src/Process_createprocess.cpp
+    )
 elseif(LINTER_CACHE_HAVE_POPEN OR LINTER_CACHE_HAVE__POPEN)
     target_sources(linter-cache-obj
         PRIVATE src/Process_popen.cpp

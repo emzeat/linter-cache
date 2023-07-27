@@ -24,6 +24,8 @@
 #include <chrono>
 #include <thread>
 
+#include "OutputGenerator.h"
+
 int
 main(int argc, char* argv[])
 {
@@ -31,8 +33,16 @@ main(int argc, char* argv[])
         if (0 == std::strcmp(argv[i], "--stderr")) {
             std::cerr << argv[++i] << std::flush;
         }
+        if (0 == std::strcmp(argv[i], "--generate-stderr")) {
+            std::cerr << generateStringWithLength(atoi(argv[++i]))
+                      << std::flush;
+        }
         if (0 == std::strcmp(argv[i], "--stdout")) {
             std::cout << argv[++i] << std::flush;
+        }
+        if (0 == std::strcmp(argv[i], "--generate-stdout")) {
+            std::cout << generateStringWithLength(atoi(argv[++i]))
+                      << std::flush;
         }
         if (0 == std::strcmp(argv[i], "--sleep")) {
             std::this_thread::sleep_for(std::chrono::seconds(atoi(argv[++i])));
