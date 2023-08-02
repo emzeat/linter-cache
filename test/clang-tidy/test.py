@@ -187,7 +187,9 @@ class TestClangTidy(unittest.TestCase):
         edited = contents.replace('<replace to edit>', 'testing')
         stats.zero()
         TestClangTidy.TESTED_FILE.write_text(edited)
-        self._run()
+        proc = self._run()
+        self.assertFalse(proc.stderr, f"Running with --quiet so nothing should end up in stderr: '{proc.stderr}'")
+        self.assertFalse(proc.stdout, f"Running with --quiet so nothing should end up in stdout: '{proc.stdout}'")
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
 
@@ -260,6 +262,7 @@ class TestClangTidy(unittest.TestCase):
         TestClangTidy.TESTED_FILE.write_text(edited)
         proc = self._run(check=False)
         self.assertNotEqual(0, proc.returncode)
+        self.assertIn("error generated", proc.stderr, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
         self.assertIn("[clang-diagnostic-error]", proc.stdout, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())

@@ -40,7 +40,7 @@ public:
                  const std::string& sourcefile) const;
 
 private:
-    void invoke(const StringList& args) const;
+    void invoke(const StringList& args, bool quiet) const;
 
     std::string _ccache;
 };

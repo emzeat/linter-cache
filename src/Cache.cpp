@@ -20,6 +20,7 @@
  */
 
 #include <memory>
+#include <iostream>
 
 #include "Cache.h"
 #include "Environment.h"
@@ -83,7 +84,7 @@ Cache::execute(const CommandlineArguments& args,
     };
 
     try {
-        invoke(ccacheArgs);
+        invoke(ccacheArgs, args.quiet);
     } catch (ProcessError& error) {
         temporary->unlink();
         throw error;
@@ -91,9 +92,19 @@ Cache::execute(const CommandlineArguments& args,
 }
 
 void
-Cache::invoke(const StringList& args) const
+Cache::invoke(const StringList& args, bool quiet) const
 {
-    Process proc(_ccache + args);
+    int flags = 0;
+    if (quiet) {
+        flags |= Process::CAPTURE_STDERR | Process::CAPTURE_STDOUT;
+    }
+    Process proc(_ccache + args, flags);
     LOG(TRACE) << "Cache: Running " << proc.cmd();
-    proc.run();
+    try {
+        proc.run();
+    } catch (ProcessError& error) {
+        std::cerr << proc.errorOutput();
+        std::cout << proc.output();
+        throw error;
+    }
 }

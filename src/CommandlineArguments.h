@@ -48,6 +48,7 @@ public:
     StringList sources;
 
     bool preprocess = false;
+    bool quiet = false;
 
     std::string objectfile;
     std::string clangTidy;
