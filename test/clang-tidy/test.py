@@ -74,22 +74,6 @@ def _cleanup() -> None:
     DEBUGDIR.mkdir(exist_ok=True, parents=True)
 
 
-def _configure_buildtree(src_dir: Path, build_dir: Path) -> None:
-    '''Configure the buildtree used to test against'''
-    subprocess.check_call(['cmake', '-S', src_dir.as_posix(), '-B', build_dir.as_posix(),
-                          '-G', 'Ninja'])
-    subprocess.check_call(
-        ['cmake', '--build', build_dir.as_posix()])
-
-
-def _prepare_buildtree(in_src_dir: Path, src_dir: Path, build_dir: Path) -> None:
-    '''Prepare the buildtree used to test against'''
-    shutil.rmtree(src_dir, ignore_errors=True)
-    shutil.copytree(in_src_dir, src_dir, dirs_exist_ok=True)
-    build_dir.mkdir(exist_ok=True, parents=True)
-    _configure_buildtree(src_dir, build_dir)
-
-
 class CCacheStats:
 
     def zero(self):
@@ -146,20 +130,42 @@ class TestClangTidy(unittest.TestCase):
     TEST_PROJ_DIR = Path(__file__).parent.resolve()
     SRC_DIR = BASE_DIR / 'src'
     BUILD_DIR = BASE_DIR / 'build'
-    TESTED_FILE = SRC_DIR / 'hello_world.cpp'
-    TESTED_CONFIG = SRC_DIR / '.clang-tidy'
-    TESTED_PROJ = SRC_DIR / 'CMakeLists.txt'
+
+    def _configure_buildtree(self, src_dir: Path, build_dir: Path) -> None:
+        '''Configure the buildtree used to test against'''
+        subprocess.check_call(['cmake', '-S', src_dir.as_posix(), '-B', build_dir.as_posix(),
+                               '-G', 'Ninja'])
+        subprocess.check_call(
+            ['cmake', '--build', build_dir.as_posix()])
+
+    def _prepare_buildtree(self, in_src_dir: Path = None, src_dir: Path = None, build_dir: Path = None) -> None:
+        '''Prepare the buildtree used to test against'''
+        if in_src_dir is None:
+            in_src_dir = TestClangTidy.TEST_PROJ_DIR
+        if src_dir is None:
+            src_dir = TestClangTidy.SRC_DIR
+        if build_dir is None:
+            build_dir = TestClangTidy.BUILD_DIR
+        shutil.rmtree(src_dir, ignore_errors=True)
+        shutil.copytree(in_src_dir, src_dir, dirs_exist_ok=True)
+        build_dir.mkdir(exist_ok=True, parents=True)
+        self._configure_buildtree(src_dir, build_dir)
+        self.SRC_DIR = src_dir
+        self.BUILD_DIR = build_dir
+        self.TESTED_FILE = src_dir / 'hello_world.cpp'
+        self.TESTED_CONFIG = src_dir / '.clang-tidy'
+        self.TESTED_PROJ = src_dir / 'CMakeLists.txt'
 
     def _run(self, extra_env: dict = None, extra_args: list = None, check: bool = True):
         env = os.environ.copy()
         if extra_env:
             env.update(extra_env)
         args = [CACHE_TIDY,
-                '-p', TestClangTidy.BUILD_DIR.as_posix(),
+                '-p', self.BUILD_DIR.as_posix(),
                 '--quiet']
         if extra_args:
             args += extra_args
-        return subprocess.run(args + [TestClangTidy.TESTED_FILE.as_posix()], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
+        return subprocess.run(args + [self.TESTED_FILE.as_posix()], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
 
     def _fill_cache(self):
         '''Ensures we can expect a cache hit'''
@@ -177,16 +183,16 @@ class TestClangTidy(unittest.TestCase):
 
     def test_source_modification(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._prepare_buildtree()
         self._fill_cache()
 
         stats = CCacheStats()
 
         # editing the input should result in a cache miss
-        contents = TestClangTidy.TESTED_FILE.read_text()
+        contents = self.TESTED_FILE.read_text()
         edited = contents.replace('<replace to edit>', 'testing')
         stats.zero()
-        TestClangTidy.TESTED_FILE.write_text(edited)
+        self.TESTED_FILE.write_text(edited)
         proc = self._run()
         self.assertFalse(proc.stderr, f"Running with --quiet so nothing should end up in stderr: '{proc.stderr}'")
         self.assertFalse(proc.stdout, f"Running with --quiet so nothing should end up in stdout: '{proc.stdout}'")
@@ -195,71 +201,71 @@ class TestClangTidy(unittest.TestCase):
 
         # changing back to the original contents should be a hit again
         stats.zero()
-        TestClangTidy.TESTED_FILE.write_text(contents)
+        self.TESTED_FILE.write_text(contents)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
     def test_config_modification(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._prepare_buildtree()
         self._fill_cache()
 
         stats = CCacheStats()
 
         # editing the configuration should result in a cache miss
-        contents = TestClangTidy.TESTED_CONFIG.read_text()
+        contents = self.TESTED_CONFIG.read_text()
         edited = contents.replace('llvm-header-guard', 'llvm-*')
         stats.zero()
-        TestClangTidy.TESTED_CONFIG.write_text(edited)
+        self.TESTED_CONFIG.write_text(edited)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
 
         # changing back to the original contents should be a hit again
         stats.zero()
-        TestClangTidy.TESTED_CONFIG.write_text(contents)
+        self.TESTED_CONFIG.write_text(contents)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
     def test_param_modification(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._prepare_buildtree()
         self._fill_cache()
 
         stats = CCacheStats()
 
         # changing compiler flags should result in a cache miss
-        contents = TestClangTidy.TESTED_PROJ.read_text()
+        contents = self.TESTED_PROJ.read_text()
         edited = contents.replace('# set(ADD_BOGUS_INCLUDE TRUE)', 'set(ADD_BOGUS_INCLUDE TRUE)')
         stats.zero()
-        TestClangTidy.TESTED_PROJ.write_text(edited)
-        _configure_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self.TESTED_PROJ.write_text(edited)
+        self._configure_buildtree(self.SRC_DIR, self.BUILD_DIR)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
 
         # changing back to the original contents should be a hit again
         stats.zero()
-        TestClangTidy.TESTED_PROJ.write_text(contents)
-        _configure_buildtree(TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self.TESTED_PROJ.write_text(contents)
+        self._configure_buildtree(self.SRC_DIR, self.BUILD_DIR)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
     def test_error_logging(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._prepare_buildtree()
         self._fill_cache()
 
         stats = CCacheStats()
 
         # introducing an error should result in a cache miss and logged output
-        contents = TestClangTidy.TESTED_FILE.read_text()
+        contents = self.TESTED_FILE.read_text()
         edited = contents.replace('// <replace to edit>', 'int error = "string";')
         stats.zero()
-        TestClangTidy.TESTED_FILE.write_text(edited)
+        self.TESTED_FILE.write_text(edited)
         proc = self._run(check=False)
         self.assertNotEqual(0, proc.returncode)
         self.assertIn("error generated", proc.stderr, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
@@ -269,7 +275,7 @@ class TestClangTidy(unittest.TestCase):
 
     def test_with_extra_args(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._prepare_buildtree()
 
         stats = CCacheStats()
         stats.zero()
@@ -286,7 +292,7 @@ class TestClangTidy(unittest.TestCase):
 
     def test_with_output_file(self):
         _cleanup()
-        _prepare_buildtree(TestClangTidy.TEST_PROJ_DIR, TestClangTidy.SRC_DIR, TestClangTidy.BUILD_DIR)
+        self._prepare_buildtree()
         output = TestClangTidy.BUILD_DIR / 'clang-tidy.stamp'
 
         stats = CCacheStats()
