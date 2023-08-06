@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/Volumes/Development/build/clang-ninja-debug/test/clang-tidy/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -std=gnu++14 -o CMakeFiles/hello_world.dir/hello_world.cpp.o -c /Volumes/Development/build/clang-ninja-debug/test/clang-tidy/src/hello_world.cpp",
+  "file": "/Volumes/Development/build/clang-ninja-debug/test/clang-tidy/src/hello_world.cpp"
+},
+{
+  "directory": "/Volumes/Development/build/clang-ninja-debug/test/clang-tidy/build",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -std=gnu++14 -o CMakeFiles/hello_world.dir/main.cpp.o -c /Volumes/Development/build/clang-ninja-debug/test/clang-tidy/src/main.cpp",
+  "file": "/Volumes/Development/build/clang-ninja-debug/test/clang-tidy/src/main.cpp"
+}
+]

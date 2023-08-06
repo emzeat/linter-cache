@@ -1,7 +1,7 @@
 /*
- * CompileCommands.h
+ * paths_in_tests.h.in
  *
- * Copyright (c) 2022 - 2023 Marius Zwicker
+ * Copyright (c) 2023 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -19,24 +19,9 @@
  * limitations under the License.
  */
 
-#ifndef COMPILE_COMMANDS_H_
-#define COMPILE_COMMANDS_H_
+#ifndef PATHS_IN_TESTS_H_
+#define PATHS_IN_TESTS_H_
 
-#include <string>
+static constexpr char kCompileCommandsJson[] = "${CMAKE_CURRENT_SOURCE_DIR}/test/unit/test_compile_commands.json";
 
-#include "StringList.h"
-
-class CompileCommands
-{
-public:
-    CompileCommands(const std::string& filepath);
-
-    StringList linesForFile(const std::string& sourcefile) const;
-
-    StringList flagsForFile(const std::string& sourcefile) const;
-
-private:
-    std::string _filepath;
-};
-
-#endif // COMPILE_COMMANDS_H_
+#endif // PATHS_IN_TESTS_H_

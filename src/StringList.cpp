@@ -34,6 +34,12 @@ StringList::StringList(char const* const* elements, size_t count)
 {}
 
 std::string
+StringList::join(char separator) const
+{
+    return join(std::string{ separator });
+}
+
+std::string
 StringList::join(const std::string& separator) const
 {
     std::string ret;
@@ -50,13 +56,19 @@ StringList::join(const std::string& separator) const
 StringList
 StringList::split(const std::string& input, char delimiter)
 {
+    return split(input, std::string{ delimiter });
+}
+
+StringList
+StringList::split(const std::string& input, const std::string& delimiter)
+{
     StringList result;
     size_t start = 0;
-    auto end = input.find_first_of(delimiter);
+    auto end = input.find(delimiter);
     while (end != std::string::npos) {
         result.push_back(input.substr(start, end - start));
-        start = end + 1;
-        end = input.find_first_of(delimiter, start);
+        start = end + delimiter.size();
+        end = input.find(delimiter, start);
     }
     if (start < end) {
         result.push_back(input.substr(start));

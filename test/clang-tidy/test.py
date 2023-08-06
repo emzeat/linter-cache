@@ -165,7 +165,7 @@ class TestClangTidy(unittest.TestCase):
                 '--quiet']
         if extra_args:
             args += extra_args
-        return subprocess.run(args + [self.TESTED_FILE.as_posix()], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
+        return subprocess.run(args + [self.TESTED_FILE.as_posix()], env=env, cwd=self.BUILD_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
 
     def _fill_cache(self):
         '''Ensures we can expect a cache hit'''
@@ -310,6 +310,32 @@ class TestClangTidy(unittest.TestCase):
         self.assertEqual(2, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
         self.assertTrue(output.exists())
+
+    def test_with_different_directories(self):
+        _cleanup()
+        base_dir0 = TestClangTidy.BUILD_DIR / '0'
+        os.environ['CCACHE_BASEDIR'] = base_dir0.as_posix()
+        build_dir0 = base_dir0 / 'build'
+        src_dir0 = base_dir0 / 'src'
+        self._prepare_buildtree(src_dir=src_dir0, build_dir=build_dir0)
+
+        stats = CCacheStats()
+        stats.zero()
+
+        # first run should be cacheable but not in the cache yet
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
+        # second run in a different build path should be served from the cache
+        base_dir1 = TestClangTidy.BUILD_DIR / '1'
+        os.environ['CCACHE_BASEDIR'] = base_dir1.as_posix()
+        build_dir1 = base_dir1 / 'build'
+        src_dir1 = base_dir1 / 'src'
+        self._prepare_buildtree(src_dir=src_dir1, build_dir=build_dir1)
+        self._run()
+        self.assertEqual(2, stats.cacheable, msg=stats.print())
+        self.assertEqual(1, stats.cache_hits, msg=stats.print())
 
 
 if __name__ == '__main__':

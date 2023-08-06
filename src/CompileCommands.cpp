@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+#include <cassert>
+
 #include "CompileCommands.h"
 #include "TemporaryFile.h"
 #include "Util.h"
@@ -30,6 +32,7 @@ CompileCommands::CompileCommands(const std::string& filepath)
 StringList
 CompileCommands::linesForFile(const std::string& sourcefile) const
 {
+    assert(Util::is_file(_filepath));
 #if _WIN32
     const auto sourcefile_backward = Util::replace_all(sourcefile, "/", "\\\\");
 #endif
@@ -54,4 +57,39 @@ CompileCommands::linesForFile(const std::string& sourcefile) const
 #endif
     }
     return out;
+}
+
+StringList
+CompileCommands::flagsForFile(const std::string& sourcefile) const
+{
+    StringList flags;
+
+    auto lines = linesForFile(sourcefile);
+    bool skip = true; // skip first item which is call to compiler
+    for (const auto& line : lines) {
+        auto start = line.find("command\": \"");
+        if (start != std::string::npos) {
+            start += 11;
+            auto end = line.find_first_of(" \"", start);
+            while (end != std::string::npos) {
+                const auto len = end - start;
+                if (len > 0) {
+                    const auto item = line.substr(start, len);
+                    if (skip) {
+                        // skip this item but parse the next
+                        skip = false;
+                    } else if ("-o" == item || "-c" == item) {
+                        // skip this and the next which is the argument
+                        skip = true;
+                    } else {
+                        flags.push_back(item);
+                    }
+                }
+                start = end + 1;
+                end = line.find_first_of(" \"", start);
+            }
+            break;
+        }
+    }
+    return flags;
 }

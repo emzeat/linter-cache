@@ -62,7 +62,6 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
     // we create this from
     // a) the source
     // b) the effective config
-    // c) the effective lines in compdb
 
     auto sourcePath = savedArgs.get(kSaveSrc);
     NamedFile sourceFile(sourcePath);
@@ -70,9 +69,6 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
     output += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
                        savedArgs.get(kSaveSrc),
                      Process::CAPTURE_STDERR | Process::CAPTURE_STDOUT);
-
-    CompileCommands compDb(savedArgs.get(kSaveCompDb));
-    output += compDb.linesForFile(sourcePath).join("");
 }
 
 void

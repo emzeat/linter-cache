@@ -138,9 +138,14 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test/unit/custom_main.h
         INPUT ${CMAKE_CURRENT_SOURCE_DIR}/test/unit/custom_main.h.in
     )
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/unit/paths_in_tests.h.in
+        ${CMAKE_CURRENT_BINARY_DIR}/test/unit/paths_in_tests.h
+    )
     add_executable(linter-cache_tests
         test/unit/main.cpp
         test/unit/test_Environment.cpp
+        test/unit/test_CompileCommands.cpp
         test/unit/test_Logging.cpp
         test/unit/test_TemporaryFile.cpp
         test/unit/test_Process.cpp
@@ -174,6 +179,7 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
         TestClangTidy.test_with_extra_args
         TestClangTidy.test_with_output_file
         TestClangTidy.test_error_logging
+        TestClangTidy.test_with_different_directories
     )
     foreach(_test IN LISTS INTEGRATION_TESTS)
         add_test(

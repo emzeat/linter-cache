@@ -32,7 +32,8 @@ Checks: >
     -misc-non-private-member-variables-in-classes,
     -readability-function-cognitive-complexity,
     -bugprone-easily-swappable-parameters,
-    -performance-no-int-to-ptr
+    -performance-no-int-to-ptr,
+    -bugprone-suspicious-missing-comma
 
 # All warnings are errors
 WarningsAsErrors: "*"

@@ -28,6 +28,7 @@
 #include "Process.h"
 #include "TemporaryFile.h"
 #include "Util.h"
+#include "CompileCommands.h"
 
 static constexpr char kEnvCcache[] = "CCACHE";
 #ifdef MZ_WINDOWS
@@ -76,12 +77,18 @@ Cache::execute(const CommandlineArguments& args,
     }
 
     // ccache expects a regular compiler call here which is somewhat different
-    // so we fake it and use a throw-away output. The actual arguments to
+    // so we fake it and use a throw-away output mixed with the actual compiler
+    // flags as given by the compile commands file. The actual arguments to
     // clang-tidy will be restored later when ccache is invoking us again in
     // turn
-    const StringList ccacheArgs = {
-        args.self, "-o", temporary->filename(), "-c", sourcefile
-    };
+    StringList ccacheArgs = { args.self };
+    if (!args.compilerDatabase.empty()) {
+        CompileCommands compilerDatabase(args.compilerDatabase);
+        const auto flags = compilerDatabase.flagsForFile(sourcefile);
+        ccacheArgs.insert(ccacheArgs.end(), flags.begin(), flags.end());
+    }
+    ccacheArgs.insert(ccacheArgs.end(),
+                      { "-o", temporary->filename(), "-c", sourcefile });
 
     try {
         invoke(ccacheArgs, args.quiet);
