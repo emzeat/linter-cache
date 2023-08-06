@@ -42,8 +42,11 @@ The resulting binaries can be found in the `bin` directory of the build folder c
 ## Usage
 
 Simply replace your calls to `clang-tidy` in your build scripts with calls to the
-`linter-cache` binary and pass `--linter-cache-clang-tidy <your clang-tidy path>`
+`linter-cache` binary and pass `--clang-tidy <your clang-tidy path>`
 to switch to clang-tidy mode and have your linting cached.
+
+For example a call `clang-tidy -p _build/compile_commands.json src/main.cpp` becomes
+`linter-cache --clang-tidy=clang-tidy -p _build/compile_commands.json src/main.cpp`
 
 ## Contributing
 

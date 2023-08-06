@@ -71,8 +71,7 @@ TEST(CommandlineArguments, CompileDatabase)
 
 TEST(CommandlineArguments, CCache)
 {
-    std::vector<char const*> argv = { "cache-tidy",
-                                      "--linter-cache-ccache=ccaceh_v3" };
+    std::vector<char const*> argv = { "cache-tidy", "--ccache=ccaceh_v3" };
 
     CommandlineArguments args(argv.size(), argv.data());
     ASSERT_STREQ("ccaceh_v3", args.ccache.c_str());
@@ -80,11 +79,9 @@ TEST(CommandlineArguments, CCache)
 
 TEST(CommandlineArguments, ClangTidy)
 {
-    std::vector<char const*> argv = {
-        "cache-tidy", "--linter-cache-clang-tidy=hello_world",
-        "foobar.cpp", "--config-file",
-        "dummy.cfg",  "--export-fixes"
-    };
+    std::vector<char const*> argv = { "cache-tidy", "--clang-tidy=hello_world",
+                                      "foobar.cpp", "--config-file",
+                                      "dummy.cfg",  "--export-fixes" };
 
     CommandlineArguments args(argv.size(), argv.data());
     ASSERT_EQ(Mode::CLANG_TIDY, args.mode);
@@ -98,8 +95,8 @@ TEST(CommandlineArguments, ClangTidy)
 TEST(CommandlineArguments, OutputExplicit)
 {
     std::vector<char const*> argv = { "cache-tidy",
-                                      "--linter-cache-clang-tidy=hello_world",
-                                      "--linter-cache-o=temporary.stamp",
+                                      "--clang-tidy=hello_world",
+                                      "--output=temporary.stamp",
                                       "foobar.cpp" };
 
     CommandlineArguments args(argv.size(), argv.data());
@@ -114,7 +111,7 @@ TEST(CommandlineArguments, OutputExplicit)
 TEST(CommandlineArguments, Output)
 {
     std::vector<char const*> argv = { "cache-tidy",
-                                      "--linter-cache-clang-tidy=hello_world",
+                                      "--clang-tidy=hello_world",
                                       "-o=temporary.stamp",
                                       "foobar.cpp" };
 

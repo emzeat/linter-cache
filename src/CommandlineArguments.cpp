@@ -52,8 +52,13 @@ CommandlineArguments::printHelp()
     std::cout << "   Wrapper to invoke linters through ccache to accelerate "
                  "analysis as"
               << std::endl;
-    std::cout << "   part of a regular compile job. Use as if running "
-                 "the linter directly."
+    std::cout << "   part of a regular compile job. Prefix your regular linter"
+                 "   call with a call to linter-cache to have it cached."
+              << std::endl;
+    std::cout << "   For example `clang-tidy -p compile_commands.json main.cpp`"
+              << std::endl;
+    std::cout << "   becomes `linter-cache --clang-tidy=clang-tidy -p "
+                 "compile_commands.json main.cpp`"
               << std::endl;
     std::cout << std::endl;
     std::cout << "   Environment variables supported for configuration:"
@@ -65,17 +70,18 @@ CommandlineArguments::printHelp()
                  "(implies LINTER_CACHE_DEBUG)"
               << std::endl;
     std::cout << std::endl;
-    std::cout << "   Special flags supported to override configuration:"
+    std::cout << "   Special runtime flags supported to override configuration:"
               << std::endl;
-    std::cout << "   --linter-cache-o=<location of a stamp file to be touched "
+    std::cout << "   --output=<location of a stamp file to be touched "
                  "on success>"
               << std::endl;
-    std::cout << "    -o <location of a stamp file to be touched on success>"
+    std::cout << "    -o=<location of a stamp file to be touched on success>"
               << std::endl;
-    std::cout << "   --linter-cache-ccache=<location of the ccache executable>"
+    std::cout << "   --ccache=<location of the ccache executable> when not in "
+                 "path or given via `CCACHE`"
               << std::endl;
-    std::cout << "   --linter-cache-clang-tidy=<location of the clang-tidy "
-                 "executable>"
+    std::cout << "   --clang-tidy=<location of the clang-tidy "
+                 "executable> when not given via `CLANG_TIDY`"
               << std::endl;
 }
 
@@ -98,8 +104,10 @@ ends_with(const std::string& string, const std::string_view& substr)
 CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
 {
     static constexpr std::string_view kCompileDb{ "-p=" };
-    static constexpr std::string_view kOutput{ "-o=" };
-    static constexpr std::string_view kLinterCache{ "--linter-cache-" };
+    static constexpr std::string_view kOutputShort{ "-o=" };
+    static constexpr std::string_view kOutputLong{ "--output=" };
+    static constexpr std::string_view kCcache{ "--ccache=" };
+    static constexpr std::string_view kClangTidy{ "--clang-tidy=" };
     static constexpr std::string_view kCppExt{ ".cpp" };
     static constexpr std::string_view kCExt{ ".c" };
 
@@ -137,27 +145,19 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
             // path to write to
             arg = argv[++i];
             objectfile = arg;
-        } else if (starts_with(arg, kOutput)) {
+        } else if (starts_with(arg, kOutputShort)) {
             // path to write to
-            objectfile = arg.substr(kOutput.size());
-        } else if (starts_with(arg, kLinterCache)) {
-            // special linter-cache option
-            arg = arg.substr(kLinterCache.size());
-
-            static constexpr std::string_view kObjectFile = "o=";
-            static constexpr std::string_view kCcache = "ccache=";
-            static constexpr std::string_view kClangTidy = "clang-tidy=";
-            if (starts_with(arg, kObjectFile)) {
-                // output was explicitly requested
-                objectfile = arg.substr(kObjectFile.size());
-            } else if (starts_with(arg, kCcache)) {
-                // ccache binary was overridden
-                ccache = arg.substr(kCcache.size());
-            } else if (starts_with(arg, kClangTidy)) {
-                // clang-tidy binary was overridden
-                clangTidy = arg.substr(kClangTidy.size());
-                mode = Mode::CLANG_TIDY;
-            }
+            objectfile = arg.substr(kOutputShort.size());
+        } else if (starts_with(arg, kOutputLong)) {
+            // path to write to
+            objectfile = arg.substr(kOutputLong.size());
+        } else if (starts_with(arg, kCcache)) {
+            // ccache binary was overridden
+            ccache = arg.substr(kCcache.size());
+        } else if (starts_with(arg, kClangTidy)) {
+            // clang-tidy binary was overridden
+            clangTidy = arg.substr(kClangTidy.size());
+            mode = Mode::CLANG_TIDY;
         } else if (ends_with(arg, kCppExt) || ends_with(arg, kCExt)) {
             // sourcefile
             sources.push_back(arg);
