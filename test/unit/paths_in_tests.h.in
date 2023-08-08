@@ -24,4 +24,14 @@
 
 static constexpr char kCompileCommandsJson[] = "${CMAKE_CURRENT_SOURCE_DIR}/test/unit/test_compile_commands.json";
 
+static constexpr char kTestUtilCpp[] = "${CMAKE_CURRENT_SOURCE_DIR}/test/unit/test_Util.cpp";
+
+static constexpr char kRelativeMainCpp[] = "${CMAKE_CURRENT_SOURCE_DIR}/test/unit/../../src/main.cpp";
+
+static constexpr char kMainCpp[] = "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp";
+
+static constexpr char kDotClangTidy[] = "${CMAKE_SOURCE_DIR}/.clang-tidy";
+
+static constexpr char kDotClangFormat[] = "${CMAKE_SOURCE_DIR}/.clang-format";
+
 #endif // PATHS_IN_TESTS_H_

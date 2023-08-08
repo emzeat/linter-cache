@@ -19,6 +19,10 @@
  * limitations under the License.
  */
 
+#include <vector>
+#include <climits>
+#include <cstdlib>
+
 #include "config.h"
 
 #include "Util.h"
@@ -56,6 +60,37 @@ Util::is_file(const std::string& filepath)
 }
 
 std::string
+Util::resolve_path(const std::string& filepath)
+{
+#if LINTER_CACHE_HAVE_GET_FULL_PATHNAME
+    static constexpr auto kPathMax = 512;
+    std::vector<char> buffer(kPathMax);
+    auto len =
+      GetFullPathNameA(filepath.c_str(), buffer.size(), buffer.data(), nullptr);
+    if (len > 0 && len <= buffer.size()) {
+        // make backward into forward slashes to maximize
+        // compatibility with other places in the code
+        for (size_t i = 0; i < len; ++i) {
+            auto& character = buffer[i];
+            if ('\\' == character) {
+                character = '/';
+            }
+        }
+        return std::string(buffer.data(), len);
+    }
+    return std::string();
+#else
+    std::vector<char> buffer;
+    buffer.resize(PATH_MAX);
+    auto* resolved = realpath(filepath.c_str(), buffer.data());
+    if (resolved) {
+        return std::string(resolved);
+    }
+    return std::string();
+#endif
+}
+
+std::string
 Util::replace_all(std::string input,
                   const std::string& old_value,
                   const std::string& new_value)
@@ -66,4 +101,26 @@ Util::replace_all(std::string input,
         pos += new_value.length();
     }
     return input;
+}
+
+std::string
+Util::find_applicable_config(const std::string& conf_name,
+                             const std::string& filepath)
+{
+    const auto input = resolve_path(filepath);
+    auto end = input.find_last_of("/\\");
+    while (end > 0 && end != std::string::npos) {
+        auto candidate = input.substr(0, end) + "/" + conf_name;
+        if (is_file(candidate)) {
+            return candidate;
+        }
+        end = input.find_last_of("/\\", end - 1);
+    }
+    return std::string();
+}
+
+std::string
+Util::preproc_file_header(const std::string& filepath)
+{
+    return "\n# 1 \"" + filepath + "\" 1\n";
 }

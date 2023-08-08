@@ -23,6 +23,7 @@
 #include "Process.h"
 #include "Logging.h"
 #include "CompileCommands.h"
+#include "Util.h"
 
 static constexpr char kEnvClangTidy[] = "CLANG_TIDY";
 static constexpr char kSaveSrc[] = "clangTidySrc";
@@ -63,12 +64,34 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
     // a) the source
     // b) the effective config
 
+    // Per https://ccache.dev/manual/4.8.2.html#_the_preprocessor_mode any
+    // includes or defines get ignored as they are also supposed to alter the
+    // preprocessed output. Should we as such run the compiler in preprocessor
+    // mode to obtain header contents?
+
     auto sourcePath = savedArgs.get(kSaveSrc);
-    NamedFile sourceFile(sourcePath);
-    output += sourceFile.readText();
-    output += invoke("--dump-config" + savedArgs.get(kSaveArgs, StringList()) +
-                       savedArgs.get(kSaveSrc),
-                     Process::CAPTURE_STDERR | Process::CAPTURE_STDOUT);
+
+    auto compDb = savedArgs.get(kSaveCompDb);
+    if (compDb.empty()) {
+        NamedFile sourceFile(sourcePath);
+        output += sourceFile.readText();
+    } else {
+        CompileCommands compDb(savedArgs.get(kSaveCompDb));
+        auto compilerArgs =
+          compDb.flagsForFile(sourcePath, /* skipCompiler */ false);
+        compilerArgs.insert(compilerArgs.end(), { "-E", "-c", sourcePath });
+
+        Process compiler(compilerArgs, Process::CAPTURE_STDOUT);
+        compiler.run();
+        output += compiler.output();
+    }
+
+    auto clang_tidy_config =
+      Util::find_applicable_config(".clang-tidy", sourcePath);
+    if (!clang_tidy_config.empty()) {
+        output += Util::preproc_file_header(clang_tidy_config);
+        output += NamedFile(clang_tidy_config).readText();
+    }
 }
 
 void

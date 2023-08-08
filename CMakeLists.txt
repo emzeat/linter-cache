@@ -50,6 +50,7 @@ check_symbol_exists( GetCurrentProcessId "Windows.h" LINTER_CACHE_HAVE_GET_CURRE
 check_symbol_exists( GetTempFileNameA "Windows.h" LINTER_CACHE_HAVE_GET_TEMP_FILE_NAME )
 check_symbol_exists( DeleteFileA "Windows.h" LINTER_CACHE_HAVE_DELETE_FILE )
 check_symbol_exists( GetFileAttributesA "Windows.h" LINTER_CACHE_HAVE_GET_FILE_ATTRIBUTES )
+check_symbol_exists( GetFullPathNameA "Windows.h" LINTER_CACHE_HAVE_GET_FULL_PATHNAME )
 check_symbol_exists( CreateProcessA "Windows.h" LINTER_CACHE_HAVE_CREATE_PROCESS )
 
 # options

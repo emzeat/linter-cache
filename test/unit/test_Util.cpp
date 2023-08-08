@@ -25,6 +25,8 @@
 #include "Util.h"
 #include "TemporaryFile.h"
 
+#include "paths_in_tests.h"
+
 TEST(Util, IsFile)
 {
     ASSERT_FALSE(Util::is_file("/never/exists"));
@@ -44,4 +46,22 @@ TEST(Util, ReplaceAll)
                  Util::replace_all("foobarbatz", "bar", "1234567").c_str());
     ASSERT_STREQ("foobarbatz",
                  Util::replace_all("foobarbatz", "world", "goo").c_str());
+}
+
+TEST(Util, ResolvePath)
+{
+    ASSERT_STREQ(kMainCpp, Util::resolve_path(kRelativeMainCpp).c_str());
+    ASSERT_STREQ(kMainCpp, Util::resolve_path(kMainCpp).c_str());
+}
+
+TEST(Util, FindApplicableConfig)
+{
+    ASSERT_STREQ(
+      kDotClangTidy,
+      Util::find_applicable_config(".clang-tidy", kTestUtilCpp).c_str());
+    ASSERT_STREQ(
+      kDotClangFormat,
+      Util::find_applicable_config(".clang-format", kTestUtilCpp).c_str());
+    ASSERT_TRUE(
+      Util::find_applicable_config(".no-such-tool", kTestUtilCpp).c_str());
 }

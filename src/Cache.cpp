@@ -79,7 +79,7 @@ Cache::execute(const CommandlineArguments& args,
     // ccache expects a regular compiler call here which is somewhat different
     // so we fake it and use a throw-away output mixed with the actual compiler
     // flags as given by the compile commands file. The actual arguments to
-    // clang-tidy will be restored later when ccache is invoking us again in
+    // the linter will be restored later when ccache is invoking us again in
     // turn
     StringList ccacheArgs = { args.self };
     if (!args.compilerDatabase.empty()) {

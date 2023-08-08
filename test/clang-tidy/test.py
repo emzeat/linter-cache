@@ -62,6 +62,9 @@ os.environ["CCACHE_DEBUG"] = "true"
 os.environ["CCACHE_DIR"] = DEBUGDIR.as_posix()
 os.environ["CCACHE_DEBUGDIR"] = DEBUGDIR.as_posix()
 
+# force disable any remote remotes in ccache to get local test results only
+os.environ["CCACHE_SECONDARY_STORAGE"] = ''
+
 # force verbose logging for linter-cache
 LINTER_CACHE_LOGFILE = DEBUGDIR / 'cache_tidy.log'
 os.environ["LINTER_CACHE_DEBUG"] = "1"

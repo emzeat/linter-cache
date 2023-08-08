@@ -33,7 +33,8 @@ public:
 
     StringList linesForFile(const std::string& sourcefile) const;
 
-    StringList flagsForFile(const std::string& sourcefile) const;
+    StringList flagsForFile(const std::string& sourcefile,
+                            bool skipCompiler = true) const;
 
 private:
     std::string _filepath;

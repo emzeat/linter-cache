@@ -33,6 +33,13 @@ public:
                                    const std::string& old_value,
                                    const std::string& new_value);
 
+    static std::string resolve_path(const std::string& filepath);
+
+    static std::string find_applicable_config(const std::string& conf_name,
+                                              const std::string& filepath);
+
+    static std::string preproc_file_header(const std::string& filepath);
+
 private:
     Util() = delete;
 };

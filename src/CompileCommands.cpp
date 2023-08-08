@@ -60,12 +60,13 @@ CompileCommands::linesForFile(const std::string& sourcefile) const
 }
 
 StringList
-CompileCommands::flagsForFile(const std::string& sourcefile) const
+CompileCommands::flagsForFile(const std::string& sourcefile,
+                              bool skipCompiler) const
 {
     StringList flags;
 
     auto lines = linesForFile(sourcefile);
-    bool skip = true; // skip first item which is call to compiler
+    bool skip = skipCompiler;
     for (const auto& line : lines) {
         auto start = line.find("command\": \"");
         if (start != std::string::npos) {
