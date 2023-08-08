@@ -29,7 +29,7 @@
 int
 main(int argc, char* argv[])
 {
-    for (size_t i = 1; i + 1 < argc; ++i) {
+    for (int i = 1; i + 1 < argc; ++i) {
         if (0 == std::strcmp(argv[i], "--stderr")) {
             std::cerr << argv[++i] << std::flush;
         }

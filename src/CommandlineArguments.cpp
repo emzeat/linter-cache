@@ -114,7 +114,7 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
     remainingArgs.reserve(argc);
     self = argv[0];
 
-    for (int i = 1; i < argc; ++i) {
+    for (size_t i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         // parsed_args.tidyargs.append(arg)
         if (arg == "-h" || arg == "--help") {

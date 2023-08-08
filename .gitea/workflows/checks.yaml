@@ -20,6 +20,9 @@ jobs:
           - runner: ubuntu-2004-large
             compiler: clang
             generator: ninja
+          - runner: ubuntu-2004-large
+            compiler: gcc
+            generator: ninja
           - runner: windows-large
             compiler: msvc
             generator: ninja_64
@@ -38,7 +41,7 @@ jobs:
             submodules: 'true'
             fetch-depth: 0
       - name: Configure
-        run: bash ./build/generator.sh compiler=${{ matrix.compiler }} generator=${{ matrix.generator }} mode=release location=inside -DMZ_DO_CPPLINT_DIFF=OFF
+        run: bash ./build/generator.sh compiler=${{ matrix.compiler }} generator=${{ matrix.generator }} mode=release location=inside -DMZ_DO_CPPLINT_DIFF=OFF -DCONAN_BUILD_MISSING=ON
       - name: Build
         run: cmake --build -j 12 --preset ${{ matrix.compiler }}-${{ matrix.generator }}-release
       - name: Package
