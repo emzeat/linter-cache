@@ -33,4 +33,5 @@ void
 HelloWorld::greet()
 {
     std::cout << _message << std::endl;
+    std::cerr << _response << std::endl;
 }

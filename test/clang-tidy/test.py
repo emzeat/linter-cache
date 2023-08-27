@@ -219,6 +219,35 @@ class TestClangTidy(unittest.TestCase):
         # changing back to the original contents should be a hit again
         stats.zero()
         self.TESTED_FILE.write_text(contents)
+        print("Verifying after restoring...")
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(1, stats.cache_hits, msg=stats.print())
+
+    def test_include_modification(self):
+        _cleanup()
+        self._prepare_buildtree()
+        self._fill_cache()
+
+        stats = CCacheStats()
+
+        # editing an included header should result in a cache miss
+        tested_header = self.TESTED_FILE.with_suffix('.h')
+        contents = tested_header.read_text()
+        edited = contents.replace('<replace to edit>', 'testing')
+        stats.zero()
+        tested_header.write_text(edited)
+        print("Verifying after modification...")
+        proc = self._run()
+        self.assertFalse(proc.stderr, f"Running with --quiet so nothing should end up in stderr: '{proc.stderr}'")
+        self.assertFalse(proc.stdout, f"Running with --quiet so nothing should end up in stdout: '{proc.stdout}'")
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
+        # changing back to the original contents should be a hit again
+        stats.zero()
+        tested_header.write_text(contents)
+        print("Verifying after restoring...")
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())

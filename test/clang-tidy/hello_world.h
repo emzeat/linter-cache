@@ -33,6 +33,7 @@ public:
 
 private:
     std::string _message;
+    std::string _response{ "What a wonderful world - <replace to edit>" };
 };
 
 #endif // HELLO_WOLRD_H_
