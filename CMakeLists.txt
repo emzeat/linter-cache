@@ -166,9 +166,10 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
     gtest_discover_tests(
         linter-cache_tests
         TEST_PREFIX unit.
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIRw}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )
 
+    add_subdirectory(test/clang-tidy)
     find_program(PYTHON3 python3 python REQUIRED)
     find_program(CCACHE ccache REQUIRED)
     find_program(CLANG_TIDY clang-tidy REQUIRED)

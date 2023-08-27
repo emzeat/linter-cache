@@ -24,11 +24,13 @@
 #include "hello_world.h"
 
 HelloWorld::HelloWorld()
-    : _message("What a wonderful blue planet")
+  : _message("What a wonderful blue planet - <replace to edit>")
 {
-    // <replace to edit>
+    // insert unused variable here
 }
 
-void HelloWorld::greet() {
+void
+HelloWorld::greet()
+{
     std::cout << _message << std::endl;
 }

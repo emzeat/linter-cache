@@ -19,11 +19,13 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef HELLO_WORLD_H_
+#define HELLO_WORLD_H_
 
 #include <string>
 
-class HelloWorld {
+class HelloWorld
+{
 public:
     HelloWorld();
 
@@ -32,3 +34,5 @@ public:
 private:
     std::string _message;
 };
+
+#endif // HELLO_WOLRD_H_

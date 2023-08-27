@@ -7,7 +7,8 @@ Checks: >
     performance-*,
     readability-*,
     security-*,
-    llvm-header-guard
+    -llvm-header-guard,
+    -modernize-use-trailing-return-type
 
 # All warnings are errors
 WarningsAsErrors: "*"

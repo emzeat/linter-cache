@@ -89,8 +89,8 @@ class CCacheStats:
         return subprocess.check_output([CCACHE, '--version'], encoding='utf8').split('\n')[0].strip()
 
     def print(self):
-        print(self._version())
-        print('\n'.join(self._stats()))
+        output = [self._version()] + self._stats()
+        return '\n'.join(output)
 
     @property
     def cache_hits(self) -> int:
@@ -165,17 +165,33 @@ class TestClangTidy(unittest.TestCase):
                 '--quiet']
         if extra_args:
             args += extra_args
-        return subprocess.run(args + [self.TESTED_FILE.as_posix()], env=env, cwd=self.BUILD_DIR, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
+
+        def dump_output(proc):
+            sys.stdout.write(proc.stdout)
+            sys.stdout.flush()
+            sys.stderr.write(proc.stderr)
+            sys.stderr.flush()
+        try:
+            proc = subprocess.run(args + [self.TESTED_FILE.as_posix()], env=env, cwd=self.BUILD_DIR,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8', check=check)
+        except subprocess.CalledProcessError as error:
+            dump_output(error)
+            raise
+        if 0 != proc.returncode:
+            dump_output(proc)
+        return proc
 
     def _fill_cache(self):
         '''Ensures we can expect a cache hit'''
         stats = CCacheStats()
         # first run should be cacheable but not in the cache yet
+        print("Populating cache...")
         stats.zero()
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
         # second run should be served from the cache
+        print("Verifying cache...")
         stats.zero()
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
@@ -193,6 +209,7 @@ class TestClangTidy(unittest.TestCase):
         edited = contents.replace('<replace to edit>', 'testing')
         stats.zero()
         self.TESTED_FILE.write_text(edited)
+        print("Verifying after modification...")
         proc = self._run()
         self.assertFalse(proc.stderr, f"Running with --quiet so nothing should end up in stderr: '{proc.stderr}'")
         self.assertFalse(proc.stdout, f"Running with --quiet so nothing should end up in stdout: '{proc.stdout}'")
@@ -215,9 +232,10 @@ class TestClangTidy(unittest.TestCase):
 
         # editing the configuration should result in a cache miss
         contents = self.TESTED_CONFIG.read_text()
-        edited = contents.replace('llvm-header-guard', 'llvm-*')
+        edited = contents.replace('-llvm-header-guard', '-llvm-*')
         stats.zero()
         self.TESTED_CONFIG.write_text(edited)
+        print("Verifying after modification...")
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
@@ -225,6 +243,7 @@ class TestClangTidy(unittest.TestCase):
         # changing back to the original contents should be a hit again
         stats.zero()
         self.TESTED_CONFIG.write_text(contents)
+        print("Verifying after restoring...")
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(1, stats.cache_hits, msg=stats.print())
@@ -238,9 +257,10 @@ class TestClangTidy(unittest.TestCase):
 
         # changing compiler flags should result in a cache miss
         contents = self.TESTED_PROJ.read_text()
-        edited = contents.replace('# set(ADD_BOGUS_INCLUDE TRUE)', 'set(ADD_BOGUS_INCLUDE TRUE)')
+        edited = contents.replace('# set(ENABLE_WARNING_AS_ERROR TRUE)', 'set(ENABLE_WARNING_AS_ERROR TRUE)')
         stats.zero()
         self.TESTED_PROJ.write_text(edited)
+        print("Verifying after modification...")
         self._configure_buildtree(self.SRC_DIR, self.BUILD_DIR)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
@@ -249,6 +269,7 @@ class TestClangTidy(unittest.TestCase):
         # changing back to the original contents should be a hit again
         stats.zero()
         self.TESTED_PROJ.write_text(contents)
+        print("Verifying after restoring...")
         self._configure_buildtree(self.SRC_DIR, self.BUILD_DIR)
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
@@ -263,7 +284,7 @@ class TestClangTidy(unittest.TestCase):
 
         # introducing an error should result in a cache miss and logged output
         contents = self.TESTED_FILE.read_text()
-        edited = contents.replace('// <replace to edit>', 'int error = "string";')
+        edited = contents.replace('// insert unused variable here', 'int error = "string";')
         stats.zero()
         self.TESTED_FILE.write_text(edited)
         proc = self._run(check=False)
@@ -323,11 +344,13 @@ class TestClangTidy(unittest.TestCase):
         stats.zero()
 
         # first run should be cacheable but not in the cache yet
+        print("Populate cache in dir 0...")
         self._run()
         self.assertEqual(1, stats.cacheable, msg=stats.print())
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
 
         # second run in a different build path should be served from the cache
+        print("Use cache in dir 1...")
         base_dir1 = TestClangTidy.BUILD_DIR / '1'
         os.environ['CCACHE_BASEDIR'] = base_dir1.as_posix()
         build_dir1 = base_dir1 / 'build'

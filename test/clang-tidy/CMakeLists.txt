@@ -25,14 +25,16 @@ project(example CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_CXX_STANDARD 14)
 
+# set(ENABLE_WARNING_AS_ERROR TRUE)
+if( ENABLE_WARNING_AS_ERROR )
+    set(CMAKE_COMPILE_WARNING_AS_ERROR TRUE)
+endif()
+
 add_executable(hello_world
     hello_world.h
     hello_world.cpp
     main.cpp
 )
-# set(ADD_BOGUS_INCLUDE TRUE)
-if( ADD_BOGUS_INCLUDE )
-    target_include_directories(hello_world
-        PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/bogus
-    )
+if(COMMAND mz_auto_format)
+    mz_auto_format(hello_world)
 endif()
