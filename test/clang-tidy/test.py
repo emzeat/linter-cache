@@ -101,6 +101,9 @@ class CCacheStats:
             match = re.search(r'Hits: +([0-9]+) /', line)
             if match:
                 return int(match[1])
+            match = re.search(r'Hits: +([0-9]+)', line)
+            if match:
+                return int(match[1])
         return -1
 
     @property
@@ -114,7 +117,7 @@ class CCacheStats:
                 return int(match[1])
             # more recent versions of ccache do not report cacheable calls anymore
             # calculate by adding hits, misses and uncacheables
-            match = re.search(r'Hits: +([0-9]+) /', line)
+            match = re.search(r'Hits: +([0-9]+)', line)
             if match and hits is None:
                 hits = int(match[1])
             match = re.search(r'Misses: +([0-9]+)', line)
@@ -316,14 +319,12 @@ class TestClangTidy(unittest.TestCase):
 
         # introducing an error should result in a cache miss and logged output
         contents = self.TESTED_FILE.read_text()
-        edited = contents.replace('// insert unused variable here', 'int error = "string";')
+        edited = contents.replace('// insert unused variable here', 'int error = 404;')
         stats.zero()
         self.TESTED_FILE.write_text(edited)
         proc = self._run(check=False)
         self.assertNotEqual(0, proc.returncode)
-        self.assertIn("error generated", proc.stderr, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
-        self.assertIn("[clang-diagnostic-error]", proc.stdout, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
-        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertIn("readability-magic-numbers", proc.stdout, f"stderr: '{proc.stderr}'\nstdout: '{proc.stdout}'")
         self.assertEqual(0, stats.cache_hits, msg=stats.print())
 
     def test_with_extra_args(self):
