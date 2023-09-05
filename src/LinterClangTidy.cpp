@@ -64,11 +64,6 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
     // a) the source
     // b) the effective config
 
-    // Per https://ccache.dev/manual/4.8.2.html#_the_preprocessor_mode any
-    // includes or defines get ignored as they are also supposed to alter the
-    // preprocessed output. Should we as such run the compiler in preprocessor
-    // mode to obtain header contents?
-
     auto sourcePath = savedArgs.get(kSaveSrc);
 
     auto compDb = savedArgs.get(kSaveCompDb);

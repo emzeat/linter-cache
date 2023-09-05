@@ -39,23 +39,41 @@ struct CommandlineArguments
 public:
     CommandlineArguments(size_t argc, char const* const* argv);
 
+    // true when help printing was requested
     bool help = false;
+
+    // the name by which the linter cache was invoked
     std::string self;
 
+    // the mode in which the linter cache is running
     Mode mode = Mode::CLANG_TIDY;
 
+    // detail on a compiler database passed (if any)
     std::string compilerDatabase;
+
+    // the sources passed for linting
     StringList sources;
 
+    // true when invoked with -E to get preprocessing output
     bool preprocess = false;
+
+    // true when invoked with --quiet to silence output
     bool quiet = false;
 
+    // any object file specified via -o
     std::string objectfile;
+
+    // the path to clang-tidy as given via `--clang-tidy`
     std::string clangTidy;
+
+    // the path to ccache as given via `--ccache`
     std::string ccache;
 
+    // arguments not matching to any of the above and
+    // which hence need to be forwarded to the linter
     StringList remainingArgs;
 
+    // will print an overview on available options
     static void printHelp();
 };
 

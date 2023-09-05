@@ -54,11 +54,8 @@ Cache::execute(const CommandlineArguments& args,
 {
     Environment env;
 
-    // in order to work reliably we force the plain preprocessor
-    // mode as this is the most efficient due to our lack of actual
-    // compiler flags and includes
+    // in order to work reliably we disable nodepend mode
     env.set("CCACHE_NODEPEND", "1");
-    env.set("CCACHE_DIRECT", "1");
 
     // we work like clang, force it
     env.set("CCACHE_COMPILERTYPE", "clang");

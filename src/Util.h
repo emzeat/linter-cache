@@ -27,17 +27,25 @@
 class Util
 {
 public:
+    // true when the given filepath points to a regular file
     static bool is_file(const std::string& filepath);
 
+    // replaces all occurences of old_value in input with the new_value
+    // and returns the resulting string
     static std::string replace_all(std::string input,
                                    const std::string& old_value,
                                    const std::string& new_value);
 
+    // resolves the given path making it absolute without any symlinks
     static std::string resolve_path(const std::string& filepath);
 
+    // searchs the parent directory of filepath and any parent directories
+    // above for a config file with the given name and returns its path
     static std::string find_applicable_config(const std::string& conf_name,
                                               const std::string& filepath);
 
+    // generates an annotation as created by the preprocessor when including
+    // the given filepath
     static std::string preproc_file_header(const std::string& filepath);
 
 private:
