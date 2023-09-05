@@ -30,27 +30,25 @@ static const StringList mainFlags = {
     "MacOSX.platform/Developer/SDKs/MacOSX.sdk",
     "-std=gnu++14"
 };
+static const std::string compiler =
+  "/Applications/Xcode.app/Contents/Developer/Toolchains/"
+  "XcodeDefault.xctoolchain/usr/bin/c++";
 
 TEST(CompileCommands, MatchLinesRelative)
 {
     CompileCommands db(kCompileCommandsJson);
 
-    auto lines = db.linesForFile("src/main.cpp");
-    ASSERT_FALSE(lines.empty());
-
     auto flags = db.flagsForFile("src/main.cpp");
-    ASSERT_EQ(mainFlags, flags);
+    ASSERT_EQ(mainFlags, flags.options);
+    ASSERT_EQ(compiler, flags.compiler);
 }
 
 TEST(CompileCommands, MatchLinesAbsolute)
 {
     CompileCommands db(kCompileCommandsJson);
 
-    auto lines = db.linesForFile("/Volumes/Development/build/clang-ninja-debug/"
-                                 "test/clang-tidy/src/main.cpp");
-    ASSERT_FALSE(lines.empty());
-
     auto flags = db.flagsForFile("/Volumes/Development/build/clang-ninja-debug/"
                                  "test/clang-tidy/src/main.cpp");
-    ASSERT_EQ(mainFlags, flags);
+    ASSERT_EQ(mainFlags, flags.options);
+    ASSERT_EQ(compiler, flags.compiler);
 }

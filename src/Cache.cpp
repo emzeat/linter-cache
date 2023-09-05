@@ -82,7 +82,8 @@ Cache::execute(const CommandlineArguments& args,
     if (!args.compilerDatabase.empty()) {
         CompileCommands compilerDatabase(args.compilerDatabase);
         const auto flags = compilerDatabase.flagsForFile(sourcefile);
-        ccacheArgs.insert(ccacheArgs.end(), flags.begin(), flags.end());
+        ccacheArgs.insert(
+          ccacheArgs.end(), flags.options.begin(), flags.options.end());
     }
     ccacheArgs.insert(ccacheArgs.end(),
                       { "-o", temporary->filename(), "-c", sourcefile });

@@ -72,8 +72,9 @@ LinterClangTidy::preprocess(const SavedArguments& savedArgs,
         output += sourceFile.readText();
     } else {
         CompileCommands compDb(savedArgs.get(kSaveCompDb));
-        auto compilerArgs =
-          compDb.flagsForFile(sourcePath, /* skipCompiler */ false);
+        auto flags = compDb.flagsForFile(sourcePath);
+        auto compilerArgs = flags.options;
+        compilerArgs.insert(compilerArgs.begin(), flags.compiler);
         compilerArgs.insert(compilerArgs.end(), { "-E", "-c", sourcePath });
 
         Process compiler(compilerArgs, Process::CAPTURE_STDOUT);

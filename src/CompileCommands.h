@@ -29,14 +29,21 @@
 class CompileCommands
 {
 public:
+    // parses the compile db at the given filepath
     CompileCommands(const std::string& filepath);
 
-    StringList linesForFile(const std::string& sourcefile) const;
+    struct Flags
+    {
+        std::string compiler;
+        StringList options;
+    };
 
-    StringList flagsForFile(const std::string& sourcefile,
-                            bool skipCompiler = true) const;
+    // returns the pair of compiler and flags for the given file
+    Flags flagsForFile(const std::string& sourcefile) const;
 
 private:
+    StringList linesForFile(const std::string& sourcefile) const;
+
     std::string _filepath;
 };
 

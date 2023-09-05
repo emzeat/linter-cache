@@ -59,14 +59,14 @@ CompileCommands::linesForFile(const std::string& sourcefile) const
     return out;
 }
 
-StringList
-CompileCommands::flagsForFile(const std::string& sourcefile,
-                              bool skipCompiler) const
+CompileCommands::Flags
+CompileCommands::flagsForFile(const std::string& sourcefile) const
 {
+    std::string compiler;
     StringList flags;
 
     auto lines = linesForFile(sourcefile);
-    bool skip = skipCompiler;
+    bool skip = false;
     for (const auto& line : lines) {
         auto start = line.find("command\": \"");
         if (start != std::string::npos) {
@@ -83,7 +83,11 @@ CompileCommands::flagsForFile(const std::string& sourcefile,
                         // skip this and the next which is the argument
                         skip = true;
                     } else {
-                        flags.push_back(item);
+                        if (compiler.empty()) {
+                            compiler = item;
+                        } else {
+                            flags.push_back(item);
+                        }
                     }
                 }
                 start = end + 1;
@@ -92,5 +96,5 @@ CompileCommands::flagsForFile(const std::string& sourcefile,
             break;
         }
     }
-    return flags;
+    return { compiler, flags };
 }
