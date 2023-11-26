@@ -25,6 +25,7 @@
 #include <cstring>
 #include <array>
 #include <vector>
+#include <exception>
 #if LINTER_CACHE_HAVE_GETPID
     #include <sys/types.h>
     #include <unistd.h>
@@ -44,15 +45,16 @@ TemporaryFile::TemporaryFile()
     // little chance of a collision even though we not use actually
     // safe methods like tmpfile(). The latter would make it really
     // hard to determine the underlying filename though
-#if LINTER_CACHE_HAVE_MKTEMP && LINTER_CACHE_HAVE_GETPID
-    static auto filenameTemplate =
-      "/tmp/linter-cache-" + std::to_string(getpid()) + "-XXXXXX";
-
-    std::vector<char> buffer;
-    buffer.resize(filenameTemplate.size() + 1);
-    std::memcpy(
-      buffer.data(), filenameTemplate.data(), filenameTemplate.size());
-    _filename = mktemp(buffer.data());
+#if LINTER_CACHE_HAVE_MKSTEMP && LINTER_CACHE_HAVE_GETPID &&                   \
+  LINTER_CACHE_HAVE_CLOSE
+    _filename = "/tmp/linter-cache-" + std::to_string(getpid()) + "-XXXXXX";
+    auto fd = mkstemp(_filename.data());
+    if (fd >= 0) {
+        close(fd);
+    } else {
+        throw std::runtime_error(
+          std::string("Failed to create temporary file: ") + strerror(errno));
+    }
 #elif LINTER_CACHE_HAVE_GET_TEMP_FILE_NAME &&                                  \
   LINTER_CACHE_HAVE_GET_CURRENT_PROCESS_ID
     std::vector<char> tempPathBuffer(1);

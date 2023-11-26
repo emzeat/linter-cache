@@ -29,16 +29,14 @@ TEST(TemporaryFile, Write)
 
     TemporaryFile temporary;
     ASSERT_TRUE(temporary);
+    ASSERT_TRUE(temporary.writeText("Unittest"));
 
     std::ifstream stream(temporary.filename());
-    ASSERT_FALSE(stream.is_open());
-    temporary.writeText("Unittest");
-
-    stream.open(temporary.filename());
+    stream.exceptions(std::ios::badbit | std::ios::failbit);
     ASSERT_TRUE(stream.is_open());
     std::string text;
     stream >> text;
-    ASSERT_STREQ("Unittest", text.c_str());
+    EXPECT_STREQ("Unittest", text.c_str());
 }
 
 TEST(TemporaryFile, Read)
