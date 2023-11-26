@@ -45,7 +45,15 @@ class LinterCacheConan(ConanFile):
             self.test_requires("gtest/1.14.0")
 
     def generate(self):
+        try:
+            gtest = self.dependencies["gtest"]
+            copy(self, "*.dll", src=gtest.cpp_info.bindirs[0], dst="../bin")
+        except KeyError:
+            pass
+
         deps = CMakeDeps(self)
+        deps.build_context_activated = ["clang-tools-extra"]
+        deps.build_context_build_modules = ["clang-tools-extra"]
         deps.generate()
 
         tc = CMakeToolchain(self, generator='Ninja')
@@ -57,17 +65,12 @@ class LinterCacheConan(ConanFile):
 
     def _configure_cmake(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.configure(variables={'CONAN_EXPORTED': True})
         return cmake
 
     def build(self):
         cmake = self._configure_cmake()
         cmake.build()
-
-    def imports(self):
-        self.copy("*.dll", dst="${EXECUTABLE_OUTPUT_PATH}", src="bin")
-        self.copy("*.dylib*", dst="${EXECUTABLE_OUTPUT_PATH}", src="lib")
-        self.copy("*.so*", dst="${EXECUTABLE_OUTPUT_PATH}", src="lib")
 
     def package(self):
         cmake = self._configure_cmake()
