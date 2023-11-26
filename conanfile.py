@@ -52,8 +52,8 @@ class LinterCacheConan(ConanFile):
             pass
 
         deps = CMakeDeps(self)
-        deps.build_context_activated = ["clang-tools-extra"]
-        deps.build_context_build_modules = ["clang-tools-extra"]
+        deps.build_context_activated = ["clang-tools-extra", "ccache"]
+        deps.build_context_build_modules = ["clang-tools-extra", "ccache"]
         deps.generate()
 
         tc = CMakeToolchain(self, generator='Ninja')
