@@ -36,10 +36,9 @@ jobs:
             compiler=${{ matrix.compiler }} \
             generator=${{ matrix.generator }} \
             mode=release \
-            location=inside \
-            -DMZ_DO_CPPLINT_DIFF=OFF
+            location=inside
       - name: Deploy
         run: |
           set -ex
           source ./build/conan.sh
-          python3 build/conan_package.py --create --upload
+          python3 build/conan_package.py --create --upload --verbose

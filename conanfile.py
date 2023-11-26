@@ -13,8 +13,6 @@
 # WITHOUT WRITTEN PERMISSION OF THE AUTHORS.
 #
 
-import os
-
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain
 from conan.tools.files import copy
@@ -36,10 +34,10 @@ class LinterCacheConan(ConanFile):
     }
 
     def export_sources(self):
-        self.copy("*", excludes=["build/*-*-*"])
+        self.copy("*", excludes=["build/*-*-*", ".git", ".vscode", ".gitmodules", "CMakeUserPresets.json"])
 
     def build_requirements(self):
-        self.tool_requires("ccache/4.6")
+        self.tool_requires("ccache/4.8.3")
         self.tool_requires("clang-tools-extra/13.0.1@emzeat/external")
         if self.options.build_tests:
             self.test_requires("gtest/1.14.0")
@@ -57,9 +55,9 @@ class LinterCacheConan(ConanFile):
         deps.generate()
 
         tc = CMakeToolchain(self, generator='Ninja')
+        tc.user_presets_path = None
         tc.cache_variables["MZ_DO_AUTO_FORMAT"] = False
         tc.cache_variables["MZ_DO_CPPLINT"] = False
-        tc.cache_variables["MZ_DO_CPPLINT_DIFF"] = False
         tc.cache_variables['BUILD_LINTER_CACHE_TESTS'] = self.options.build_tests
         tc.generate()
 
@@ -79,3 +77,5 @@ class LinterCacheConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.bindirs = ['bin']
+        self.cpp_info.libdirs = []
+        self.cpp_info.includedirs = []

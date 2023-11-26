@@ -48,7 +48,7 @@ jobs:
             generator=${{ matrix.generator }} \
             mode=release \
             location=inside \
-            -DMZ_DO_CPPLINT_DIFF=OFF -DCONAN_BUILD_MISSING=ON
+            -DCONAN_BUILD_MISSING=ON
       - name: Build
         run: |
           set -ex
@@ -59,7 +59,7 @@ jobs:
         run: |
           set -ex
           source ./build/conan.sh
-          python3 build/conan_package.py --create
+          python3 build/conan_package.py --create --verbose
       - name: Test
         run: |
           set -ex
