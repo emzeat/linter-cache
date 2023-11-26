@@ -1,5 +1,5 @@
 /*
- * Process.h
+ * Subprocess.h
  *
  * Copyright (c) 2023 Marius Zwicker
  * All rights reserved.

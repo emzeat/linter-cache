@@ -25,7 +25,7 @@
 #include "Cache.h"
 #include "Environment.h"
 #include "Logging.h"
-#include "Process.h"
+#include "Subprocess.h"
 #include "TemporaryFile.h"
 #include "Util.h"
 #include "CompileCommands.h"

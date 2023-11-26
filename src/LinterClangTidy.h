@@ -23,7 +23,7 @@
 #define LINTER_CLANG_TIDY_H_
 
 #include "Linter.h"
-#include "Process.h"
+#include "Subprocess.h"
 
 class LinterClangTidy : public Linter
 {

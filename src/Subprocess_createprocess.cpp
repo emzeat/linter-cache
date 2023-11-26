@@ -1,5 +1,5 @@
 /*
- * Process_createprocess.cpp
+ * Subprocess_createprocess.cpp
  *
  * Copyright (c) 2023 Marius Zwicker
  * All rights reserved.
@@ -23,7 +23,7 @@
 #include <iostream>
 #include <cstring>
 
-#include "Process.h"
+#include "Subprocess.h"
 #include "Logging.h"
 #include "Util.h"
 

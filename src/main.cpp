@@ -24,7 +24,7 @@
 
 #include "CommandlineArguments.h"
 #include "Environment.h"
-#include "Process.h"
+#include "Subprocess.h"
 
 #include "Cache.h"
 #include "Linter.h"

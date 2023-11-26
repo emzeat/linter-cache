@@ -20,7 +20,7 @@
  */
 
 #include "LinterClangTidy.h"
-#include "Process.h"
+#include "Subprocess.h"
 #include "Logging.h"
 #include "CompileCommands.h"
 #include "Util.h"

@@ -78,12 +78,12 @@ add_library(linter-cache-obj STATIC
     src/Logging.h
     src/NamedFile.cpp
     src/NamedFile.h
-    src/Process.cpp
-    src/Process.h
     src/SavedArguments.cpp
     src/SavedArguments.h
     src/StringList.cpp
     src/StringList.h
+    src/Subprocess.cpp
+    src/Subprocess.h
     src/TemporaryFile.cpp
     src/TemporaryFile.h
     src/Util.cpp
@@ -98,15 +98,15 @@ target_include_directories(linter-cache-obj
 )
 if(LINTER_CACHE_HAVE_EXECVP AND (LINTER_CACHE_HAVE_PIDFD_OPEN OR LINTER_CACHE_HAVE_KEVENT))
     target_sources(linter-cache-obj
-        PRIVATE src/Process_fork.cpp
+        PRIVATE src/Subprocess_fork.cpp
     )
 elseif(LINTER_CACHE_HAVE_CREATE_PROCESS)
     target_sources(linter-cache-obj
-        PRIVATE src/Process_createprocess.cpp
+        PRIVATE src/Subprocess_createprocess.cpp
     )
 elseif(LINTER_CACHE_HAVE_POPEN OR LINTER_CACHE_HAVE__POPEN)
     target_sources(linter-cache-obj
-        PRIVATE src/Process_popen.cpp
+        PRIVATE src/Subprocess_popen.cpp
     )
 endif()
 mz_target_props(linter-cache-obj)
@@ -150,9 +150,9 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
         test/unit/test_CompileCommands.cpp
         test/unit/test_Logging.cpp
         test/unit/test_TemporaryFile.cpp
-        test/unit/test_Process.cpp
         test/unit/test_SavedArguments.cpp
         test/unit/test_StringList.cpp
+        test/unit/test_Subprocess.cpp
         test/unit/test_CommandlineArguments.cpp
         test/unit/test_Util.cpp
     )

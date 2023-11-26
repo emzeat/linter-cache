@@ -1,5 +1,5 @@
 /*
- * test_Process.cpp
+ * test_Subprocess.cpp
  *
  * Copyright (c) 2023 Marius Zwicker
  * All rights reserved.
@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 
-#include "Process.h"
+#include "Subprocess.h"
 #include "OutputGenerator.h"
 #include "custom_main.h"
 
