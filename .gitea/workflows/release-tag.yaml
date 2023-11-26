@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
-        shell: ${{ env.RUNNER_SHELL }}
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -31,6 +31,7 @@ jobs:
             submodules: 'true'
       - name: Configure
         run: |
+          set -ex
           bash ./build/generator.sh \
             compiler=${{ matrix.compiler }} \
             generator=${{ matrix.generator }} \
@@ -38,4 +39,7 @@ jobs:
             location=inside \
             -DMZ_DO_CPPLINT_DIFF=OFF
       - name: Deploy
-        run: python3 build/conan_package.py --create --upload
+        run: |
+          set -ex
+          source ./build/conan.sh
+          python3 build/conan_package.py --create --upload

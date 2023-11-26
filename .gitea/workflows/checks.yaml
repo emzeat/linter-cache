@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
-        shell: ${{ env.RUNNER_SHELL }}
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -41,10 +41,28 @@ jobs:
             submodules: 'true'
             fetch-depth: 0
       - name: Configure
-        run: bash ./build/generator.sh compiler=${{ matrix.compiler }} generator=${{ matrix.generator }} mode=release location=inside -DMZ_DO_CPPLINT_DIFF=OFF -DCONAN_BUILD_MISSING=ON
+        run: |
+          set -ex
+          bash ./build/generator.sh \
+            compiler=${{ matrix.compiler }} \
+            generator=${{ matrix.generator }} \
+            mode=release \
+            location=inside \
+            -DMZ_DO_CPPLINT_DIFF=OFF -DCONAN_BUILD_MISSING=ON
       - name: Build
-        run: cmake --build -j 12 --preset ${{ matrix.compiler }}-${{ matrix.generator }}-release
+        run: |
+          set -ex
+          cmake \
+            --build -j 12 \
+            --preset ${{ matrix.compiler }}-${{ matrix.generator }}-release
       - name: Package
-        run: python3 build/conan_package.py --create
+        run: |
+          set -ex
+          source ./build/conan.sh
+          python3 build/conan_package.py --create
       - name: Test
-        run: ctest -j 1 --preset ${{ matrix.compiler }}-${{ matrix.generator }}-release
+        run: |
+          set -ex
+          ctest \
+            -j 1 \
+            --preset ${{ matrix.compiler }}-${{ matrix.generator }}-release
