@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.25)
 project(example CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)

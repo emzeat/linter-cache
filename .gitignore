@@ -2,4 +2,4 @@
 /test/debug
 /.vscode
 CMakeLists.txt.user
-CMakePresets.json
+CMakeUserPresets.json
