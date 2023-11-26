@@ -20,10 +20,11 @@
 #
 
 cmake_minimum_required(VERSION 3.25)
-project(example CXX)
+project(example CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_C_STANDARD 11)
 
 # set(ENABLE_WARNING_AS_ERROR TRUE)
 if( ENABLE_WARNING_AS_ERROR )
@@ -37,4 +38,11 @@ add_executable(hello_world
 )
 if(COMMAND mz_auto_format)
     mz_auto_format(hello_world)
+endif()
+
+add_executable(hello_world_c
+    main.c
+)
+if(COMMAND mz_auto_format)
+    mz_auto_format(hello_world_c)
 endif()

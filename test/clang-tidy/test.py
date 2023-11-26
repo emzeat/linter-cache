@@ -144,7 +144,7 @@ class TestClangTidy(unittest.TestCase):
         subprocess.check_call(
             ['cmake', '--build', build_dir.as_posix()])
 
-    def _prepare_buildtree(self, in_src_dir: Path = None, src_dir: Path = None, build_dir: Path = None) -> None:
+    def _prepare_buildtree(self, in_src_dir: Path = None, src_dir: Path = None, build_dir: Path = None, tested_file: str = 'hello_world.cpp') -> None:
         '''Prepare the buildtree used to test against'''
         if in_src_dir is None:
             in_src_dir = TestClangTidy.TEST_PROJ_DIR
@@ -158,7 +158,7 @@ class TestClangTidy(unittest.TestCase):
         self._configure_buildtree(src_dir, build_dir)
         self.SRC_DIR = src_dir
         self.BUILD_DIR = build_dir
-        self.TESTED_FILE = src_dir / 'hello_world.cpp'
+        self.TESTED_FILE = src_dir / tested_file
         self.TESTED_CONFIG = src_dir / '.clang-tidy'
         self.TESTED_PROJ = src_dir / 'CMakeLists.txt'
 
@@ -206,6 +206,33 @@ class TestClangTidy(unittest.TestCase):
     def test_source_modification(self):
         _cleanup()
         self._prepare_buildtree()
+        self._fill_cache()
+
+        stats = CCacheStats()
+
+        # editing the input should result in a cache miss
+        contents = self.TESTED_FILE.read_text()
+        edited = contents.replace('<replace to edit>', 'testing')
+        stats.zero()
+        self.TESTED_FILE.write_text(edited)
+        print("Verifying after modification...")
+        proc = self._run()
+        self.assertFalse(proc.stderr, f"Running with --quiet so nothing should end up in stderr: '{proc.stderr}'")
+        self.assertFalse(proc.stdout, f"Running with --quiet so nothing should end up in stdout: '{proc.stdout}'")
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(0, stats.cache_hits, msg=stats.print())
+
+        # changing back to the original contents should be a hit again
+        stats.zero()
+        self.TESTED_FILE.write_text(contents)
+        print("Verifying after restoring...")
+        self._run()
+        self.assertEqual(1, stats.cacheable, msg=stats.print())
+        self.assertEqual(1, stats.cache_hits, msg=stats.print())
+
+    def test_source_modification_c(self):
+        _cleanup()
+        self._prepare_buildtree(tested_file='main.c')
         self._fill_cache()
 
         stats = CCacheStats()
