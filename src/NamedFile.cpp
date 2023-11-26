@@ -74,6 +74,7 @@ NamedFile::readText() const
     auto* input = fopen(_filename.c_str(), "r");
     if (input) {
         std::array<char, 512> buffer;
+        buffer[0] = '\0';
         while (fgets(buffer.data(), buffer.size(), input)) {
             text.append(buffer.data());
             buffer[0] = '\0';
