@@ -7,7 +7,7 @@ Checks: >
     performance-*,
     readability-*,
     security-*,
-    llvm-header-guard,
+    -bugprone-reserved-identifier,
     -clang-diagnostic-pragma-pack,
     -modernize-avoid-c-arrays,
     -modernize-concat-nested-namespaces,
@@ -16,6 +16,7 @@ Checks: >
     -modernize-return-braced-init-list,
     -modernize-use-default-member-init,
     -modernize-use-trailing-return-type,
+    -modernize-use-nodiscard,
     -modernize-make-unique,
     -readability-avoid-const-params-in-decls
     -readability-identifier-naming,
@@ -40,3 +41,6 @@ WarningsAsErrors: "*"
 
 # Align with clang-format
 FormatStyle: file
+
+# Include warnings from headers
+HeaderFilterRegex: ".*"

@@ -27,6 +27,8 @@
 class Util
 {
 public:
+    Util() = delete;
+
     // true when the given filepath points to a regular file
     static bool is_file(const std::string& filepath);
 
@@ -47,9 +49,6 @@ public:
     // generates an annotation as created by the preprocessor when including
     // the given filepath
     static std::string preproc_file_header(const std::string& filepath);
-
-private:
-    Util() = delete;
 };
 
 #endif // UTIL_H_

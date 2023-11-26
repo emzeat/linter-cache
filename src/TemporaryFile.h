@@ -28,7 +28,7 @@ class TemporaryFile : public NamedFile
 {
 public:
     TemporaryFile();
-    ~TemporaryFile();
+    ~TemporaryFile() override;
 };
 
 #endif // TEMPORARY_FILE_H_
