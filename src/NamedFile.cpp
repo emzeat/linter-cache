@@ -50,13 +50,22 @@ NamedFile::readLines() const
 
     auto* input = fopen(_filename.c_str(), "r");
     if (input) {
-        std::vector<char> buffer(2048, '\0');
+        std::string current;
+        std::array<char, 2048> buffer;
         while (fgets(buffer.data(), static_cast<int>(buffer.size()), input)) {
-            out.push_back(buffer.data());
+            current.append(buffer.data());
+            if (!current.empty() && current.back() == '\n') {
+                current.pop_back(); // drop newline
+                out.push_back(current);
+                current.clear();
+            }
             buffer[0] = '\0';
         }
         if (buffer[0] != '\0') {
-            out.push_back(buffer.data());
+            current.append(buffer.data());
+        }
+        if (!current.empty()) {
+            out.push_back(current);
         }
         fclose(input);
     }
@@ -73,7 +82,7 @@ NamedFile::readText() const
 
     auto* input = fopen(_filename.c_str(), "r");
     if (input) {
-        std::array<char, 512> buffer;
+        std::array<char, 2048> buffer;
         buffer[0] = '\0';
         while (fgets(buffer.data(), buffer.size(), input)) {
             text.append(buffer.data());
