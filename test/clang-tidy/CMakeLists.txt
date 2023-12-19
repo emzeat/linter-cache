@@ -31,6 +31,14 @@ if( ENABLE_WARNING_AS_ERROR )
     set(CMAKE_COMPILE_WARNING_AS_ERROR TRUE)
 endif()
 
+foreach(INCL IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+    if( APPLE AND INCL MATCHES ".+c\\+\\+.+" )
+        # workaround mixing clang-tidy versions on modern macOS failing
+        # to find the C++ system includes by explicitly passing them
+        add_compile_options(-isystem${INCL})
+    endif()
+endforeach()
+
 add_executable(hello_world
     hello_world.h
     hello_world.cpp
