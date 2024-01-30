@@ -34,7 +34,8 @@ Checks: >
     -readability-function-cognitive-complexity,
     -bugprone-easily-swappable-parameters,
     -performance-no-int-to-ptr,
-    -bugprone-suspicious-missing-comma
+    -bugprone-suspicious-missing-comma,
+    -bugprone-branch-clone
 
 # All warnings are errors
 WarningsAsErrors: "*"

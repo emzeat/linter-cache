@@ -1,7 +1,7 @@
 /*
  * test_CommandlineArguments.cpp
  *
- * Copyright (c) 2023 Marius Zwicker
+ * Copyright (c) 2023 - 2024 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -124,10 +124,25 @@ TEST(CommandlineArguments, Output)
     ASSERT_FALSE(args.preprocess);
 }
 
-TEST(CommandlineArguments, Preprocess)
+TEST(CommandlineArguments, Preprocess_Gcc)
 {
     std::vector<char const*> argv = { "cache-tidy", "-E", "-p", "_build" };
 
     CommandlineArguments args(argv.size(), argv.data());
     ASSERT_TRUE(args.preprocess);
+}
+
+TEST(CommandlineArguments, Preprocess_Msvc)
+{
+    std::vector<char const*> argv = { "cache-tidy", "/P", "/FiC:/foobar", "-p", "_build" };
+
+    CommandlineArguments args(argv.size(), argv.data());
+    ASSERT_TRUE(args.preprocess);
+    ASSERT_STREQ("C:/foobar", args.objectfile.c_str());
+
+    std::vector<char const*> argv2 = { "cache-tidy", "/P", "/Fi", "C:/foobar", "-p", "_build" };
+
+    CommandlineArguments args2(argv2.size(), argv2.data());
+    ASSERT_TRUE(args2.preprocess);
+    ASSERT_STREQ("C:/foobar", args2.objectfile.c_str());
 }

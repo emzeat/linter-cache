@@ -1,7 +1,7 @@
 /*
  * CommandlineArguments.cpp
  *
- * Copyright (c) 2022 - 2023 Marius Zwicker
+ * Copyright (c) 2022 - 2024 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -122,7 +122,7 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
             help = true;
             return;
         }
-        if (arg == "-E") {
+        if (arg == "-E" || arg == "-P" || arg == "/P") {
             preprocess = true;
             remainingArgs.push_back(arg);
         } else if (arg == "--quiet") {
@@ -151,6 +151,13 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
         } else if (starts_with(arg, kOutputLong)) {
             // path to write to
             objectfile = arg.substr(kOutputLong.size());
+        } else if ( (arg == "-Fi" || arg == "/Fi") && i + 1 < argc) {
+            // path to preprocess to
+            arg = argv[++i];
+            objectfile = arg;
+        } else if ( (starts_with(arg, "-Fi") || starts_with(arg, "/Fi"))) {
+            // path to preprocess to
+            objectfile = arg.substr(3);
         } else if (starts_with(arg, kCcache)) {
             // ccache binary was overridden
             ccache = arg.substr(kCcache.size());
