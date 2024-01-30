@@ -1,7 +1,7 @@
 #
 # test.py
 #
-# Copyright (c) 2023 Marius Zwicker
+# Copyright (c) 2023 - 2024 Marius Zwicker
 # All rights reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -41,6 +41,8 @@ parser.add_argument('--ccache', default=CCACHE)
 parser.add_argument('--clang-tidy', default=CLANG_TIDY)
 parser.add_argument('--linter-cache', required=True, type=Path)
 parser.add_argument('--path', default=None)
+parser.add_argument('--compiler-c', default=None, type=Path)
+parser.add_argument('--compiler-cxx', default=None, type=Path)
 args, remaining = parser.parse_known_args()
 BASE_DIR = args.base_dir
 CCACHE = args.ccache
@@ -51,6 +53,12 @@ sys.argv = sys.argv[0:1] + remaining
 # explicitly set path when provided
 if args.path:
     os.environ['PATH'] = args.path
+
+# explicitly set the compiler when provided
+if args.compiler_c:
+    os.environ['CC'] = args.compiler_c.as_posix()
+if args.compiler_cxx:
+    os.environ['CXX'] = args.compiler_cxx.as_posix()
 
 # configure ccache and clang-tidy
 os.environ['CCACHE'] = CCACHE

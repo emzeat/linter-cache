@@ -1,7 +1,7 @@
 #
 # CMakeLists.txt
 #
-# Copyright (c) 2011 - 2023 Marius Zwicker
+# Copyright (c) 2011 - 2024 Marius Zwicker
 # All rights reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -197,6 +197,8 @@ if(BUILD_LINTER_CACHE_TESTS AND NOT CONAN_EXPORTED)
                 --ccache ${CCACHE}
                 --clang-tidy ${CLANG_TIDY}
                 --linter-cache $<TARGET_FILE:linter-cache>
+                --compiler-c ${CMAKE_C_COMPILER}
+                --compiler-cxx ${CMAKE_CXX_COMPILER}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
     endforeach()
