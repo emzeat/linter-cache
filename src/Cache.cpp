@@ -1,7 +1,7 @@
 /*
  * Cache.cpp
  *
- * Copyright (c) 2022 - 2023 Marius Zwicker
+ * Copyright (c) 2022 - 2024 Marius Zwicker
  * All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
@@ -55,14 +55,16 @@ Cache::execute(const CommandlineArguments& args,
     Environment env;
 
     // in order to work reliably we disable nodepend mode
-    env.set("CCACHE_NODEPEND", "1");
-
-    // we work like clang, force it
-    env.set("CCACHE_COMPILERTYPE", "clang");
+    if(env.get("CCACHE_NODEPEND").empty() && env.get("CCACHE_DEPEND").empty()) {
+        env.set("CCACHE_NODEPEND", "1");
+    }
 
     if (Util::is_file(linter.executable())) {
         auto extraFiles = env.get("CCACHE_EXTRAFILES");
-        extraFiles += kPathSep + linter.executable();
+        if(!extraFiles.empty()) {
+            extraFiles += kPathSep;
+        }
+        extraFiles += linter.executable();
         env.set("CCACHE_EXTRAFILES", extraFiles);
     }
 
@@ -79,14 +81,22 @@ Cache::execute(const CommandlineArguments& args,
     // the linter will be restored later when ccache is invoking us again in
     // turn
     StringList ccacheArgs = { args.self };
+    bool isMsvc = false;
     if (!args.compilerDatabase.empty()) {
         CompileCommands compilerDatabase(args.compilerDatabase);
         const auto flags = compilerDatabase.flagsForFile(sourcefile);
         ccacheArgs.insert(
           ccacheArgs.end(), flags.options.begin(), flags.options.end());
+
+        isMsvc = (flags.compiler.find( "cl" ) != std::string::npos);
     }
     ccacheArgs.insert(ccacheArgs.end(),
                       { "-o", temporary->filename(), "-c", sourcefile });
+
+    // we work like clang, force it unless overridden
+    if(env.get("CCACHE_COMPILERTYPE").empty()) {
+        env.set("CCACHE_COMPILERTYPE", isMsvc ? "clang-cl" : "clang");
+    }
 
     try {
         invoke(ccacheArgs, args.quiet);

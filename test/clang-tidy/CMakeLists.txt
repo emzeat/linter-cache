@@ -1,7 +1,7 @@
 #
 # CMakeLists.txt
 #
-# Copyright (c) 2023 Marius Zwicker
+# Copyright (c) 2023 - 2024 Marius Zwicker
 # All rights reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -38,6 +38,11 @@ foreach(INCL IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
         add_compile_options(-isystem${INCL})
     endif()
 endforeach()
+
+if(MSVC)
+    # test compiler specific flag handling
+    add_compile_options(/EHs /EHc)
+endif()
 
 add_executable(hello_world
     hello_world.h
