@@ -16,6 +16,6 @@ repos:
     -   id: autopep8
         args: [--in-place, --max-line-length=120]
 -   repo: https://github.com/emzeat/mz-lictools
-    rev: v2.4.4
+    rev: v2.7.0
     hooks:
     -   id: license-tools
