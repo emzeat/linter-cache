@@ -108,11 +108,27 @@ TEST(CommandlineArguments, OutputExplicit)
     ASSERT_FALSE(args.preprocess);
 }
 
-TEST(CommandlineArguments, Output)
+TEST(CommandlineArguments, Output_Gcc)
 {
     std::vector<char const*> argv = { "cache-tidy",
                                       "--clang-tidy=hello_world",
                                       "-o=temporary.stamp",
+                                      "foobar.cpp" };
+
+    CommandlineArguments args(argv.size(), argv.data());
+    ASSERT_EQ(Mode::CLANG_TIDY, args.mode);
+    ASSERT_STREQ("hello_world", args.clangTidy.c_str());
+    ASSERT_EQ(StringList({ "foobar.cpp" }), args.sources);
+    ASSERT_EQ(StringList(), args.remainingArgs);
+    ASSERT_STREQ("temporary.stamp", args.objectfile.c_str());
+    ASSERT_FALSE(args.preprocess);
+}
+
+TEST(CommandlineArguments, Output_Msvc)
+{
+    std::vector<char const*> argv = { "cache-tidy",
+                                      "--clang-tidy=hello_world",
+                                      "-Fotemporary.stamp",
                                       "foobar.cpp" };
 
     CommandlineArguments args(argv.size(), argv.data());

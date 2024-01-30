@@ -158,6 +158,9 @@ CommandlineArguments::CommandlineArguments(size_t argc, char const* const* argv)
         } else if ( (starts_with(arg, "-Fi") || starts_with(arg, "/Fi"))) {
             // path to preprocess to
             objectfile = arg.substr(3);
+        } else if ( (starts_with(arg, "-Fo") || starts_with(arg, "/Fo"))) {
+            // path to output to
+            objectfile = arg.substr(3);
         } else if (starts_with(arg, kCcache)) {
             // ccache binary was overridden
             ccache = arg.substr(kCcache.size());
